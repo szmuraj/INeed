@@ -1,0 +1,18 @@
+﻿
+// scss-docs-start color-variables
+$answer-red: #A00000 !default;
+$answer-red-light: #FF0000 !default;
+$answer-gray: #777777 !default;
+$answer-green-light: #00AA00 !default;
+$answer-green: #008000 !default;
+
+$lemon: #76FF03 !default;
+$blue1: #1A2D41 !default;
+$blue700: #1565C0 !default;
+$blue500: #348CDB !default;
+$turquoise: #26A69A !default;
+$text-secondary: #D9D9D9 !default;
+$green200: #E5F5D0 !default;
+
+// scss-docs-end color-variables
+@import "../lib/bootstrap/dist/scss/bootstrap.scss";
