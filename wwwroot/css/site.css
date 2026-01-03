@@ -18,7 +18,29 @@ html {
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
+    font-family: Railway, Verdana, sans-serif;
+    font-weight: 600;
+}
+
+h1 {
+    font-family: Nunito, Verdana, sans-serif;
+    font-weight: 800;
+}
+
+h2, h3 {
+    font-family: Nunito, Verdana, sans-serif;
+    font-weight: 700;
+}
+
+h4{
+    font-family: Raleway, Verdana, sans-serif;
+    font-weight: 600;
+}
+}
+h5, h6 {
+    font-family: Raleway, Verdana, sans-serif;
+    font-weight: 400;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
