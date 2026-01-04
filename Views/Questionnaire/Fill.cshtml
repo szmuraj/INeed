@@ -1,0 +1,190 @@
+﻿@model INeed.Models.Form
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+
+            <div class="d-flex justify-content-between align-items-start mb-5" style="color: #D9D9D9;">
+                <div class="text-start pe-4">
+                    <h2 class="fw-bold text-uppercase mb-3">@Model.Title</h2>
+                    <p class="lead" style="font-size: 1.1rem; opacity: 0.9;">
+                        @(!string.IsNullOrEmpty(Model.DecryptionLong) ? Model.DecryptionLong : Model.DecryptionShort)
+                    </p>
+                </div>
+                <div id="page-counter" class="fw-bold fs-4 text-nowrap" style="opacity: 0.8;">
+                    Strona <span id="current-page">1</span> / <span id="total-pages">1</span>
+                </div>
+            </div>
+
+            <form id="questionnaireForm" method="post">
+                @if (Model.Questions != null && Model.Questions.Any())
+                {
+                    <div id="questions-container">
+                        @foreach (var question in Model.Questions.OrderBy(q => q.Number))
+                        {
+                            <div class="card mb-4 border-0 shadow-sm question-card" style="border-radius: 10px; background-color: #F9FDF4;">
+                                <div class="card-body p-4">
+                                    <h5 class="fw-bold mb-4 text-dark">
+                                        <span class="badge bg-secondary me-2">@question.Number</span> @question.Query
+                                    </h5>
+
+                                    <div class="d-flex flex-wrap gap-2 justify-content-start answers-wrapper">
+                                        @if (question.Answers != null && question.Answers.Any())
+                                        {
+                                            foreach (var answer in question.Answers.OrderBy(a => a.Order))
+                                            {
+                                                <input type="radio"
+                                                       class="btn-check"
+                                                       name="Question_@question.QuestionId"
+                                                       id="Answer_@answer.AnswerId"
+                                                       value="@answer.AnswerId">
+
+                                                <label class="btn text-white fw-bold flex-grow-1 shadow-sm"
+                                                       for="Answer_@answer.AnswerId"
+                                                       style="background-color: @answer.Color; border: 1px solid @answer.Color; min-width: 130px;">
+                                                    @answer.Reply <span class="small opacity-75">(@answer.Score)</span>
+                                                </label>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mt-5 d-flex gap-3">
+                        <button type="button" id="btn-prev" class="btn btn-secondary fw-bold py-3 shadow-sm"
+                                style="border-radius: 10px; font-size: 1.1rem; display: none; width: 150px;">
+                            &larr; WRÓĆ
+                        </button>
+
+                        <button type="button" id="btn-next" class="btn fw-bold py-3 shadow-sm flex-grow-1"
+                                style="background-color: #76FF03; color: #000; border: none; border-radius: 10px; font-size: 1.1rem;">
+                            KONTYNUUJ &rarr;
+                        </button>
+
+                        <button type="submit" id="btn-submit" class="btn fw-bold py-3 shadow-sm flex-grow-1"
+                                style="background-color: #FFF700; color: #000; border-radius: 10px; font-size: 1.1rem; display: none;">
+                            WYŚLIJ ODPOWIEDZI &rarr;
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning">Brak pytań.</div>
+                }
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-check:checked + .btn {
+        box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.5) !important;
+        transform: scale(1.05);
+        z-index: 10;
+        border-color: #000 !important;
+        filter: brightness(110%);
+    }
+
+    .answers-wrapper.answered .btn-check:not(:checked) + .btn {
+        background-color: #000 !important;
+        border-color: #000 !important;
+        color: #fff !important;
+        opacity: 1 !important;
+    }
+
+    .btn:hover {
+        opacity: 0.9;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const inputs = document.querySelectorAll('.btn-check');
+        inputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const wrapper = this.closest('.answers-wrapper');
+                if (wrapper) wrapper.classList.add('answered');
+            });
+        });
+
+        const questions = document.querySelectorAll('.question-card');
+        const itemsPerPage = 5;
+        let currentPage = 1;
+        const totalPages = Math.ceil(questions.length / itemsPerPage);
+
+        const pageCountSpan = document.getElementById('current-page');
+        const totalPagesSpan = document.getElementById('total-pages');
+        const btnNext = document.getElementById('btn-next');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnSubmit = document.getElementById('btn-submit');
+        const form = document.getElementById('questionnaireForm');
+
+        totalPagesSpan.innerText = totalPages;
+
+        function validatePage(page) {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            for (let i = start; i < end; i++) {
+                if (questions[i]) {
+                    const checkedOption = questions[i].querySelector('input[type="radio"]:checked');
+                    if (!checkedOption) return false;
+                }
+            }
+            return true;
+        }
+
+        function showPage(page) {
+            questions.forEach(q => q.style.display = 'none');
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            for (let i = start; i < end; i++) {
+                if (questions[i]) questions[i].style.display = 'block';
+            }
+            pageCountSpan.innerText = page;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            btnPrev.style.display = (page > 1) ? 'block' : 'none';
+            if (page === totalPages) {
+                btnNext.style.display = 'none';
+                btnSubmit.style.display = 'block';
+            } else {
+                btnNext.style.display = 'block';
+                btnSubmit.style.display = 'none';
+            }
+        }
+
+        btnNext.addEventListener('click', function () {
+            if (validatePage(currentPage)) {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    showPage(currentPage);
+                }
+            } else {
+                alert("Proszę udzielić odpowiedzi na wszystkie pytania na tej stronie.");
+            }
+        });
+
+        btnPrev.addEventListener('click', function () {
+            if (currentPage > 1) {
+                currentPage--;
+                showPage(currentPage);
+            }
+        });
+
+        form.addEventListener('submit', function(e) {
+            if (!validatePage(currentPage)) {
+                e.preventDefault();
+                alert("Proszę udzielić odpowiedzi na wszystkie pytania.");
+            }
+        });
+
+        showPage(1);
+    });
+</script>
