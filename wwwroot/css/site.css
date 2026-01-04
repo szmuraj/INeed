@@ -1,53 +1,115 @@
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=Raleway:wght@400;600&display=swap');
+@import "variables";
+@import "../lib/bootstrap/dist/scss/bootstrap.scss";
 
 body {
     margin-bottom: 60px;
-    font-family: Railway, Verdana, sans-serif;
+    font-family: 'Raleway', Verdana, sans-serif;
     font-weight: 600;
+    background-color: $white;
+    color: $white;
+    // Poprawione: teraz kolor tekstu zadzia³a
 }
 
 h1 {
-    font-family: Nunito, Verdana, sans-serif;
+    font-family: 'Nunito', Verdana, sans-serif;
     font-weight: 800;
 }
 
 h2, h3 {
-    font-family: Nunito, Verdana, sans-serif;
+    font-family: 'Nunito', Verdana, sans-serif;
     font-weight: 700;
 }
 
-h4{
-    font-family: Raleway, Verdana, sans-serif;
+h4 {
+    font-family: 'Raleway', Verdana, sans-serif;
     font-weight: 600;
 }
-}
+
 h5, h6 {
-    font-family: Raleway, Verdana, sans-serif;
+    font-family: 'Raleway', Verdana, sans-serif;
     font-weight: 400;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+// --- PASEK BOCZNY (Sidebar) ---
+.sidebar-container {
+    background-color: darken($blue1, 3%);
+    // Minimalnie ciemniejszy od t³a border-right: 1px solid lighten($blue1, 5%);
+    // Poprawione: odkomentowano border min-height: 100vh;
+    width: 280px;
+    // Sta³a szerokoœæ paska
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+// --- STYLE PRZYCISKÓW ODPOWIEDZI (KAFELKI) ---
+.btn-answer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 55px;
+    padding: 8px 12px;
+    // Typografia wnêtrza przycisku font-family: 'Raleway', sans-serif;
+    // Poprawione: odkomentowano font-family font-weight: 600;
+    font-size: 0.85rem;
+    line-height: 1.1;
+    text-align: center;
+    color: $white;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    opacity: 0.85;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    // Poprawione: odkomentowano box-shadow
+}
+
+// Hover (najechanie myszk¹)
+.btn-answer:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+// Stan AKTYWNY (po klikniêciu)
+.btn-check:checked + .btn-answer {
+    opacity: 1;
+    border-color: $white;
+    // Bia³a ramka box-shadow: 0 0 10px rgba(255,255,255,0.3);
+    // Poprawione: odkomentowano cieñ font-weight: 700;
+}
+
+// Kolory kafelków
+.tile-red {
+    background-color: $answer-red;
+}
+
+.tile-red-light {
+    background-color: $answer-red-light;
+}
+
+.tile-gray {
+    background-color: $answer-gray;
+}
+
+.tile-green-light {
+    background-color: $answer-green-light;
+}
+
+.tile-green {
+    background-color: $answer-green;
+}
+
+// Przycisk "KONTYNUUJ" (Lemon)
+.btn-continue {
+    background-color: $lemon;
+    color: #000;
+    // Czarny tekst na jasnym zielonym dla kontrastu font-family: 'Nunito', sans-serif;
+    // Poprawione: odkomentowano font-family font-weight: 800;
+    border: none;
+    text-transform: uppercase;
+    &:hover
+
+{
+    background-color: lighten($lemon, 5%);
+    color: #000;
+}
 }

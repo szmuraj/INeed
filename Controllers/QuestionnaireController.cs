@@ -1,8 +1,7 @@
 ﻿using INeed.Data;
 using INeed.Models;
-using INeed.Services;
+using INeed.Services; // Niezbędne do obsługi wysyłki e-maili
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace INeed.Controllers
@@ -19,6 +18,7 @@ namespace INeed.Controllers
         }
 
         // --- GET: Wyświetlanie formularza (Standardowy) ---
+        // Atrybut w nawiasie naprawia problem 404, wiążąc URL bezpośrednio z ID
         [HttpGet("Questionnaire/Fill/{id}")]
         public async Task<IActionResult> Fill(Guid id)
         {
@@ -57,6 +57,7 @@ namespace INeed.Controllers
             if (form == null) return NotFound();
             if (!form.IsActive) return Content("Ten formularz jest nieaktywny.");
 
+            // Zwracamy widok "Fill", aby nie dublować kodu HTML
             return View("Fill", form);
         }
 
@@ -68,7 +69,7 @@ namespace INeed.Controllers
             return await ProcessFormSubmission(id, collection);
         }
 
-        // --- POST: Wysłanie wyniku na email ---
+        // --- POST: Wysłanie wyniku na email i zapisanie subskrybenta ---
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendResult(
@@ -84,8 +85,9 @@ namespace INeed.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // 1. Zapis do bazy (Newsletter)
+            // 1. DODAWANIE DO BAZY SUBS (Newsletter)
             var existingSub = await _context.Subs.FirstOrDefaultAsync(s => s.Email == email);
+
             if (existingSub == null)
             {
                 var newSub = new Sub
@@ -99,7 +101,7 @@ namespace INeed.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // 2. Treść maila
+            // 2. PRZYGOTOWANIE TREŚCI MAILA (HTML)
             string body = $@"
                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
                     <h2 style='color: #1A2D41; text-align: center;'>Twoje wyniki: {formTitle}</h2>
@@ -137,23 +139,24 @@ namespace INeed.Controllers
 
                     <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
                     <p style='text-align: center; font-size: 12px; color: #888;'>Wiadomość wygenerowana automatycznie przez system INeed.</p>
+                    <p style='text-align: center; font-size: 10px; color: #aaa;'>Klikając wyślij zgadzasz się na warunki korzystania z usługi.</p>
                 </div>";
 
-            // 3. Wysyłka
+            // 3. WYSŁANIE MAILA
             try
             {
                 await _emailService.SendEmailAsync(email, $"Twój wynik: {formTitle}", body);
                 TempData["SuccessMessage"] = "Wyniki zostały wysłane na Twój adres e-mail.";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                TempData["ErrorMessage"] = $"Błąd wysyłki: {ex.Message}";
+                TempData["ErrorMessage"] = "Wystąpił błąd podczas wysyłania e-maila. Spróbuj ponownie później.";
             }
 
             return RedirectToAction("Index", "Home");
         }
 
-        // --- LOGIKA PUNKTACJI ---
+        // --- METODA POMOCNICZA: GŁÓWNA LOGIKA OBLICZANIA WYNIKÓW ---
         private async Task<IActionResult> ProcessFormSubmission(Guid id, IFormCollection formCollection)
         {
             var questionnaire = await _context.Forms
@@ -163,11 +166,13 @@ namespace INeed.Controllers
 
             if (questionnaire == null) return NotFound();
 
+            // --- DEFINICJA GRUP PYTAŃ ---
             var groupAchievement = new[] { 1, 5, 9, 13, 17 };
             var groupAffiliation = new[] { 2, 6, 10, 14 };
             var groupAutonomy = new[] { 3, 7, 11, 15, 18 };
             var groupDominance = new[] { 4, 8, 12, 16, 19 };
 
+            // Zmienne na wyniki
             int scoreAchievement = 0, maxAchievement = 0;
             int scoreAffiliation = 0, maxAffiliation = 0;
             int scoreAutonomy = 0, maxAutonomy = 0;
@@ -175,9 +180,11 @@ namespace INeed.Controllers
 
             foreach (var question in questionnaire.Questions)
             {
+                // Obliczamy max dla danego pytania
                 int maxQ = question.Answers.Any() ? question.Answers.Max(a => a.Score) : 0;
                 int points = 0;
 
+                // Sprawdzamy co zaznaczył użytkownik
                 string formKey = $"Question_{question.QuestionId}";
                 if (formCollection.ContainsKey(formKey))
                 {
@@ -188,13 +195,33 @@ namespace INeed.Controllers
                     }
                 }
 
-                if (groupAchievement.Contains(question.Number)) { scoreAchievement += points; maxAchievement += maxQ; }
-                else if (groupAffiliation.Contains(question.Number)) { scoreAffiliation += points; maxAffiliation += maxQ; }
-                else if (groupAutonomy.Contains(question.Number)) { scoreAutonomy += points; maxAutonomy += maxQ; }
-                else if (groupDominance.Contains(question.Number)) { scoreDominance += points; maxDominance += maxQ; }
+                // --- PRZYPISANIE DO GRUPY ---
+                if (groupAchievement.Contains(question.Number))
+                {
+                    scoreAchievement += points;
+                    maxAchievement += maxQ;
+                }
+                else if (groupAffiliation.Contains(question.Number))
+                {
+                    scoreAffiliation += points;
+                    maxAffiliation += maxQ;
+                }
+                else if (groupAutonomy.Contains(question.Number))
+                {
+                    scoreAutonomy += points;
+                    maxAutonomy += maxQ;
+                }
+                else if (groupDominance.Contains(question.Number))
+                {
+                    scoreDominance += points;
+                    maxDominance += maxQ;
+                }
             }
 
+            // Przekazanie danych do widoku (ViewBag)
             ViewBag.FormTitle = questionnaire.Title;
+
+            // Helper do obliczania procentów
             double CalcPercent(int score, int max) => max > 0 ? Math.Round((double)score / max * 100, 0) : 0;
 
             ViewBag.PercentAchievement = CalcPercent(scoreAchievement, maxAchievement);
@@ -202,6 +229,7 @@ namespace INeed.Controllers
             ViewBag.PercentAutonomy = CalcPercent(scoreAutonomy, maxAutonomy);
             ViewBag.PercentDominance = CalcPercent(scoreDominance, maxDominance);
 
+            // Zwracamy widok Result (musi znajdować się w Views/Questionnaire/Result.cshtml)
             return View("Result");
         }
     }
