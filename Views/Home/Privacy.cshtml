@@ -1,6 +1,67 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Polityka Prywatności";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="text-center mb-5">
+                <h1 class="fw-bold display-5">Polityka Prywatności</h1>
+                <p class="text-muted lead">Dbamy o bezpieczeństwo Twoich danych.</p>
+            </div>
+
+            <div class="card shadow-sm border-0" style="border-radius: 15px;">
+                <div class="card-body p-5">
+
+                    <h4 class="fw-bold mb-3">1. Administrator Danych</h4>
+                    <p>
+                        Administratorem Twoich danych osobowych jest właściciel serwisu <strong>INeed</strong>.
+                        W sprawach związanych z ochroną danych możesz skontaktować się z nami pod adresem e-mail:
+                        <a href="mailto:kontakt@ineed.pl">kontakt@ineed.pl</a>.
+                    </p>
+                    <hr class="my-4 opacity-25">
+
+                    <h4 class="fw-bold mb-3">2. Jakie dane zbieramy i po co?</h4>
+                    <p>W ramach korzystania z serwisu zbieramy następujące dane:</p>
+                    <ul>
+                        <li><strong>Adres e-mail:</strong> Jest niezbędny do przesłania Ci wyników wypełnionego kwestionariusza oraz (za Twoją zgodą) do wysyłki newslettera.</li>
+                        <li><strong>Wyniki ankiet:</strong> Przechowujemy Twoje odpowiedzi w formie zanonimizowanych statystyk lub przypisanych do adresu e-mail w celu wygenerowania raportu.</li>
+                        <li><strong>Pliki Cookies:</strong> Używamy ich do zapewnienia poprawnego działania sesji użytkownika.</li>
+                    </ul>
+                    <hr class="my-4 opacity-25">
+
+                    <h4 class="fw-bold mb-3">3. Newsletter i Subskrypcja</h4>
+                    <p>
+                        Podając swój adres e-mail w formularzu wyników, wyrażasz zgodę na otrzymanie jednorazowej wiadomości z raportem.
+                        Jeśli zaznaczysz opcję newslettera, będziemy wysyłać Ci informacje o nowościach.
+                        <br><br>
+                        <strong>Pamiętaj:</strong> W każdej chwili możesz zrezygnować z subskrypcji, korzystając z formularza wypisu w zakładce "Kontakt" lub klikając link w stopce wiadomości e-mail.
+                    </p>
+                    <hr class="my-4 opacity-25">
+
+                    <h4 class="fw-bold mb-3">4. Bezpieczeństwo</h4>
+                    <p>
+                        Stosujemy szyfrowanie połączenia (certyfikat SSL) oraz bezpieczne metody przechowywania haseł i danych w bazie,
+                        aby chronić Twoje informacje przed niepowołanym dostępem.
+                    </p>
+                    <hr class="my-4 opacity-25">
+
+                    <h4 class="fw-bold mb-3">5. Twoje Prawa (RODO)</h4>
+                    <p>Zgodnie z RODO przysługuje Ci prawo do:</p>
+                    <ul>
+                        <li>Wglądu w swoje dane.</li>
+                        <li>Poprawiania swoich danych.</li>
+                        <li>Żądania usunięcia danych ("prawo do bycia zapomnianym").</li>
+                        <li>Wniesienia sprzeciwu wobec przetwarzania danych.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-center mt-5">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark px-4 py-2" style="border-radius: 10px;">
+                    &larr; Wróć do strony głównej
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -57,6 +57,8 @@
                         }
                     </div>
 
+                    @* USUNIĘTO SEKCJĘ EMAIL *@
+
                     <div class="mt-5 d-flex gap-3">
                         <button type="button" id="btn-prev" class="btn btn-secondary fw-bold py-3 shadow-sm"
                                 style="border-radius: 10px; font-size: 1.1rem; display: none; width: 150px;">
@@ -107,6 +109,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // --- 1. UI - Kolory po zaznaczeniu ---
         const inputs = document.querySelectorAll('.btn-check');
         inputs.forEach(input => {
             input.addEventListener('change', function() {
@@ -115,11 +118,15 @@
             });
         });
 
+        // --- 2. Stronnicowanie ---
         const questions = document.querySelectorAll('.question-card');
+
+        // Konfiguracja
         const itemsPerPage = 5;
         let currentPage = 1;
         const totalPages = Math.ceil(questions.length / itemsPerPage);
 
+        // Elementy DOM
         const pageCountSpan = document.getElementById('current-page');
         const totalPagesSpan = document.getElementById('total-pages');
         const btnNext = document.getElementById('btn-next');
@@ -132,12 +139,15 @@
         function validatePage(page) {
             const start = (page - 1) * itemsPerPage;
             const end = start + itemsPerPage;
+
+            // Sprawdzamy czy na każde pytanie na obecnej stronie udzielono odpowiedzi
             for (let i = start; i < end; i++) {
                 if (questions[i]) {
                     const checkedOption = questions[i].querySelector('input[type="radio"]:checked');
                     if (!checkedOption) return false;
                 }
             }
+            // Usunięto walidację emaila, bo sekcja została usunięta
             return true;
         }
 
@@ -145,17 +155,23 @@
             questions.forEach(q => q.style.display = 'none');
             const start = (page - 1) * itemsPerPage;
             const end = start + itemsPerPage;
+
             for (let i = start; i < end; i++) {
                 if (questions[i]) questions[i].style.display = 'block';
             }
+
             pageCountSpan.innerText = page;
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
+            // Logika przycisków
             btnPrev.style.display = (page > 1) ? 'block' : 'none';
+
             if (page === totalPages) {
+                // Ostatnia strona: Ukryj 'Kontynuuj', Pokaż 'Wyślij'
                 btnNext.style.display = 'none';
                 btnSubmit.style.display = 'block';
             } else {
+                // Inne strony: Pokaż 'Kontynuuj', Ukryj 'Wyślij'
                 btnNext.style.display = 'block';
                 btnSubmit.style.display = 'none';
             }

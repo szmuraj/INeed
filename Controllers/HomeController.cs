@@ -24,12 +24,22 @@ namespace INeed.Controllers
             return View(forms);
         }
 
+        // --- NOWA METODA: Polityka Prywatnoœci ---
+        public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        public IActionResult Terms()
+        {
+            return View();
+        }
+
         public IActionResult Contact()
         {
             return View();
         }
 
-        // --- NOWA METODA: WYPISANIE Z NEWSLETTERA ---
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Unsubscribe(string email)
@@ -39,15 +49,12 @@ namespace INeed.Controllers
                 return RedirectToAction("Contact");
             }
 
-            // Szukamy subskrybenta po mailu
             var sub = await _context.Subs.FirstOrDefaultAsync(s => s.Email == email);
 
             if (sub != null)
             {
-                // Zamiast usuwaæ, zmieniamy statusy na false
                 sub.IsActive = false;
                 sub.Newsletter = false;
-
                 _context.Subs.Update(sub);
                 await _context.SaveChangesAsync();
             }
