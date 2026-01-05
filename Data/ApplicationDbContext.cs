@@ -29,10 +29,11 @@ namespace INeed.Data
                 .HasForeignKey(q => q.FormId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // --- POPRAWKA TUTAJ ---
             modelBuilder.Entity<Answer>()
                 .HasOne(a => a.Question)
-                .WithMany()
-                .HasForeignKey(a => a.QuestionId) 
+                .WithMany(q => q.Answers) // Wskazujemy, że Pytanie ma kolekcję Answers
+                .HasForeignKey(a => a.QuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

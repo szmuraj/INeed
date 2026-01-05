@@ -59,8 +59,8 @@ namespace INeed.Migrations
 
                     b.Property<string>("DecryptionShort")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Graphic")
                         .IsRequired()
@@ -91,8 +91,8 @@ namespace INeed.Migrations
 
                     b.Property<string>("Query")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.HasKey("QuestionId");
 
@@ -329,7 +329,7 @@ namespace INeed.Migrations
             modelBuilder.Entity("INeed.Models.Answer", b =>
                 {
                     b.HasOne("INeed.Models.Question", "Question")
-                        .WithMany()
+                        .WithMany("Answers")
                         .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -402,6 +402,11 @@ namespace INeed.Migrations
             modelBuilder.Entity("INeed.Models.Form", b =>
                 {
                     b.Navigation("Questions");
+                });
+
+            modelBuilder.Entity("INeed.Models.Question", b =>
+                {
+                    b.Navigation("Answers");
                 });
 #pragma warning restore 612, 618
         }

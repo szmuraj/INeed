@@ -1,26 +1,58 @@
-using System.Diagnostics;
-using INeed.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using INeed.Data;
+using INeed.Models;
+using System.Diagnostics;
 
 namespace INeed.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ApplicationDbContext context)
         {
-            _logger = logger;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
+        {
+            var forms = _context.Forms != null
+                ? await _context.Forms.Where(f => f.IsActive).ToListAsync()
+                : new List<Form>();
+
+            return View(forms);
+        }
+
+        public IActionResult Contact()
         {
             return View();
         }
 
-        public IActionResult Privacy()
+        // --- NOWA METODA: WYPISANIE Z NEWSLETTERA ---
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Unsubscribe(string email)
         {
-            return View();
+            if (string.IsNullOrEmpty(email) || _context.Subs == null)
+            {
+                return RedirectToAction("Contact");
+            }
+
+            // Szukamy subskrybenta po mailu
+            var sub = await _context.Subs.FirstOrDefaultAsync(s => s.Email == email);
+
+            if (sub != null)
+            {
+                // Zamiast usuwaæ, zmieniamy statusy na false
+                sub.IsActive = false;
+                sub.Newsletter = false;
+
+                _context.Subs.Update(sub);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Contact");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

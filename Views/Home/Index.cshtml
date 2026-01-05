@@ -1,17 +1,93 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<INeed.Models.Form>
+
+@{
+    ViewData["Title"] = "Strona główna";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="d-flex flex-column gap-4">
+
+    <div class="border-bottom border-white border-opacity-25 pb-3">
+        <h2 class="fw-bold">Dostępne Kwestionariusze</h2>
+        <p class="text-white-50 mb-0">Wybierz ankietę z listy poniżej, aby rozpocząć proces oceny.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var item in Model)
+            {
+                // col-md-6 oznacza 2 kafelki na rząd na tabletach
+                // col-lg-4 oznacza 3 kafelki na rząd na komputerach
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="d-flex flex-column h-100 border border-secondary border-opacity-25 shadow-sm mx-auto"
+                         style="background-color: #F9FDF4; border-radius: 10px; overflow: hidden; transition: transform 0.2s; max-width: 250px;">
+
+                        @if (!string.IsNullOrEmpty(item.Graphic))
+                        {
+                            <img src="~/images/@item.Graphic"
+                                 alt="@item.Title"
+                                 class="w-100"
+                                 style="height: 198px; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <div class="w-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-10"
+                                 style="height: 198px;">
+                                <span class="text-dark opacity-50">Brak grafiki</span>
+                            </div>
+                        }
+
+                        <div class="p-3 d-flex flex-column flex-grow-1">
+
+                            <h5 class="fw-bold text-uppercase mb-2 text-truncate"
+                                style="color: #000; letter-spacing: 0.5px;"
+                                title="@item.Title">
+                                @item.Title
+                            </h5>
+
+                            <p class="small text-dark mb-3 flex-grow-1" style="font-size: 0.85rem;">
+                                @item.DecryptionShort
+                            </p>
+
+                            <div class="mt-auto">
+                                @if (item.Title != null && item.Title.ToUpper().Contains("KOP"))
+                                {
+                                    <a asp-controller="Questionnaire" asp-action="KOP" asp-route-id="@item.Id"
+                                       class="btn w-100 btn-sm fw-bold"
+                                       style="background-color: #76FF03; color: #000; border: none;">
+                                        SPRAWDŹ &rarr;
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Questionnaire" asp-action="Fill" asp-route-id="@item.Id"
+                                       class="btn w-100 btn-sm fw-bold"
+                                       style="background-color: #76FF03; color: #000; border: none;">
+                                        SPRAWDŹ &rarr;
+                                    </a>
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="alert alert-info d-flex align-items-center justify-content-center bg-transparent text-white border-white border-opacity-25" role="alert">
+                    <svg class="bi flex-shrink-0 me-2" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" />
+                    </svg>
+                    <div>
+                        Brak aktywnych kwestionariuszy w bazie danych.
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
 </div>
-
-<button type="button" class="btn btn-answer-red">Primary</button>
-<button type="button" class="btn btn-answer-red-light">Secondary</button>
-<button type="button" class="btn btn-answer-gray">Success</button>
-<button type="button" class="btn btn-answer-green-light">Danger</button>
-<button type="button" class="btn btn-answer-green">Warning</button>
-<button type="button" class="btn btn-lemon">Info</button>
-
-<button type="button" class="btn btn-link">Link</button>

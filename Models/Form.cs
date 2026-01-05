@@ -14,7 +14,7 @@ namespace INeed.Models
         public string? Title { get; set; }
 
         [Display(Name = "Krótki opis formularza: ")]
-        [StringLength(50, ErrorMessage = "Krótki opis formularza nie może być dłuższy niż 50 znaków.")]
+        [StringLength(100, ErrorMessage = "Krótki opis formularza nie może być dłuższy niż 100 znaków.")]
         public string DecryptionShort { get; set; } = string.Empty;
 
         [Display(Name = "Pełny opis formularza: ")]

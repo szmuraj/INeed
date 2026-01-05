@@ -16,8 +16,14 @@ namespace INeed.Models
         [ForeignKey("FormId")]
         public virtual Form? Form { get; set; }
 
+        // --- NOWE POLE: NUMER PYTANIA ---
+        [Display(Name = "Numer pytania: ")]
+        public int Number { get; set; }
+
         [Display(Name = "Treść pytania: ")]
-        [StringLength(50, ErrorMessage = "Treść pytania nie może być dłuższa niż 50 znaków.")]
+        [StringLength(255, ErrorMessage = "Treść pytania nie może być dłuższa niż 255 znaków.")]
         public string Query { get; set; } = string.Empty;
+
+        public virtual ICollection<Answer> Answers { get; set; } = new List<Answer>();
     }
 }
