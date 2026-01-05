@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace INeed.Migrations
 {
     /// <inheritdoc />
-    public partial class RelationFix : Migration
+    public partial class InitialCreateFinal : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -56,7 +56,7 @@ namespace INeed.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    DecryptionShort = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    DecryptionShort = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DecryptionLong = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Graphic = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false)
@@ -194,7 +194,9 @@ namespace INeed.Migrations
                 {
                     QuestionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FormId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Query = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                    Number = table.Column<int>(type: "int", nullable: false),
+                    Query = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -213,8 +215,10 @@ namespace INeed.Migrations
                 {
                     AnswerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     QuestionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Reply = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
-                    Score = table.Column<int>(type: "int", nullable: false)
+                    Reply = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Score = table.Column<int>(type: "int", nullable: false),
+                    Order = table.Column<int>(type: "int", nullable: false),
+                    Color = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
                 {

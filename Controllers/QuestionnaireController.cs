@@ -1,8 +1,8 @@
-﻿using INeed.Data;
-using INeed.Models;
-using INeed.Services; // Niezbędne do obsługi wysyłki e-maili
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using INeed.Data;
+using INeed.Models;
+using INeed.Services;
 
 namespace INeed.Controllers
 {
@@ -17,8 +17,7 @@ namespace INeed.Controllers
             _emailService = emailService;
         }
 
-        // --- GET: Wyświetlanie formularza (Standardowy) ---
-        // Atrybut w nawiasie naprawia problem 404, wiążąc URL bezpośrednio z ID
+        // GET: /Questionnaire/Fill/{id}
         [HttpGet("Questionnaire/Fill/{id}")]
         public async Task<IActionResult> Fill(Guid id)
         {
@@ -30,46 +29,52 @@ namespace INeed.Controllers
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (form == null) return NotFound();
-            if (!form.IsActive) return Content("Ten formularz jest nieaktywny.");
-
             return View(form);
         }
 
-        // --- POST: Przesłanie odpowiedzi (Standardowy) ---
+        // POST: /Questionnaire/Fill/{id}
         [HttpPost("Questionnaire/Fill/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Fill(Guid id, IFormCollection collection)
         {
-            return await ProcessFormSubmission(id, collection);
-        }
-
-        // --- GET: Wyświetlanie formularza (KOP) ---
-        [HttpGet("Questionnaire/KOP/{id}")]
-        public async Task<IActionResult> KOP(Guid id)
-        {
-            if (id == Guid.Empty) return NotFound();
-
-            var form = await _context.Forms
+            var questionnaire = await _context.Forms
                 .Include(f => f.Questions)
                 .ThenInclude(q => q.Answers)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (form == null) return NotFound();
-            if (!form.IsActive) return Content("Ten formularz jest nieaktywny.");
+            if (questionnaire == null) return NotFound();
 
-            // Zwracamy widok "Fill", aby nie dublować kodu HTML
-            return View("Fill", form);
+            // Obliczanie wyników
+            var scores = new Dictionary<string, (int actual, int max)>();
+
+            foreach (var q in questionnaire.Questions)
+            {
+                string cat = string.IsNullOrEmpty(q.Category) ? "INNE" : q.Category.Trim().ToUpper();
+                if (!scores.ContainsKey(cat)) scores[cat] = (0, 0);
+
+                int maxQ = q.Answers.Any() ? q.Answers.Max(a => a.Score) : 0;
+                int actualQ = 0;
+
+                if (collection.TryGetValue($"Question_{q.QuestionId}", out var val) && Guid.TryParse(val, out Guid aId))
+                {
+                    actualQ = q.Answers.FirstOrDefault(a => a.AnswerId == aId)?.Score ?? 0;
+                }
+
+                var current = scores[cat];
+                scores[cat] = (current.actual + actualQ, current.max + maxQ);
+            }
+
+            // Przypisanie do ViewBag
+            ViewBag.FormTitle = questionnaire.Title;
+            ViewBag.PercentAchievement = scores.TryGetValue("ACH", out var sAch) && sAch.max > 0 ? Math.Round((double)sAch.actual / sAch.max * 100) : 0;
+            ViewBag.PercentAffiliation = scores.TryGetValue("AFF", out var sAff) && sAff.max > 0 ? Math.Round((double)sAff.actual / sAff.max * 100) : 0;
+            ViewBag.PercentAutonomy = scores.TryGetValue("AUT", out var sAut) && sAut.max > 0 ? Math.Round((double)sAut.actual / sAut.max * 100) : 0;
+            ViewBag.PercentDominance = scores.TryGetValue("DOM", out var sDom) && sDom.max > 0 ? Math.Round((double)sDom.actual / sDom.max * 100) : 0;
+
+            return View("Result");
         }
 
-        // --- POST: Przesłanie odpowiedzi (KOP) ---
-        [HttpPost("Questionnaire/KOP/{id}")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> KOP(Guid id, IFormCollection collection)
-        {
-            return await ProcessFormSubmission(id, collection);
-        }
-
-        // --- POST: Wysłanie wyniku na email i zapisanie subskrybenta ---
+        // POST: Wysyłka wyników (To naprawia błąd 405 i obsługuje formularz z Result.cshtml)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendResult(
@@ -80,156 +85,78 @@ namespace INeed.Controllers
             double percentDominance,
             string formTitle)
         {
-            if (string.IsNullOrEmpty(email))
-            {
-                return RedirectToAction("Index", "Home");
-            }
+            if (string.IsNullOrEmpty(email)) return RedirectToAction("Index", "Home");
 
-            // 1. DODAWANIE DO BAZY SUBS (Newsletter)
+            // 1. Zapis do bazy
             var existingSub = await _context.Subs.FirstOrDefaultAsync(s => s.Email == email);
-
             if (existingSub == null)
             {
-                var newSub = new Sub
-                {
-                    Email = email,
-                    IsActive = true,
-                    Newsletter = true,
-                    AddedAt = DateTime.Now
-                };
-                _context.Subs.Add(newSub);
-                await _context.SaveChangesAsync();
+                _context.Subs.Add(new Sub { Email = email, IsActive = true, Newsletter = true, AddedAt = DateTime.Now });
             }
+            else
+            {
+                existingSub.IsActive = true;
+                existingSub.Newsletter = true;
+            }
+            await _context.SaveChangesAsync();
 
-            // 2. PRZYGOTOWANIE TREŚCI MAILA (HTML)
-            string body = $@"
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
-                    <h2 style='color: #1A2D41; text-align: center;'>Twoje wyniki: {formTitle}</h2>
-                    <p>Dziękujemy za wypełnienie kwestionariusza. Oto Twój profil motywacyjny:</p>
-                    
-                    <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-
-                    <div style='margin-bottom: 15px;'>
-                        <strong>Potrzeba Osiągnięć:</strong> {percentAchievement}%
-                        <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin-top: 5px;'>
-                            <div style='width: {percentAchievement}%; background-color: #76FF03; height: 100%; border-radius: 5px;'></div>
-                        </div>
-                    </div>
-
-                    <div style='margin-bottom: 15px;'>
-                        <strong>Potrzeba Afiliacji:</strong> {percentAffiliation}%
-                        <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin-top: 5px;'>
-                            <div style='width: {percentAffiliation}%; background-color: #26A69A; height: 100%; border-radius: 5px;'></div>
-                        </div>
-                    </div>
-
-                    <div style='margin-bottom: 15px;'>
-                        <strong>Potrzeba Autonomii:</strong> {percentAutonomy}%
-                        <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin-top: 5px;'>
-                            <div style='width: {percentAutonomy}%; background-color: #FFF700; height: 100%; border-radius: 5px;'></div>
-                        </div>
-                    </div>
-
-                    <div style='margin-bottom: 15px;'>
-                        <strong>Potrzeba Dominacji:</strong> {percentDominance}%
-                        <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin-top: 5px;'>
-                            <div style='width: {percentDominance}%; background-color: #D32F2F; height: 100%; border-radius: 5px;'></div>
-                        </div>
-                    </div>
-
-                    <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-                    <p style='text-align: center; font-size: 12px; color: #888;'>Wiadomość wygenerowana automatycznie przez system INeed.</p>
-                    <p style='text-align: center; font-size: 10px; color: #aaa;'>Klikając wyślij zgadzasz się na warunki korzystania z usługi.</p>
-                </div>";
-
-            // 3. WYSŁANIE MAILA
+            // 2. Wysyłka maila
             try
             {
-                await _emailService.SendEmailAsync(email, $"Twój wynik: {formTitle}", body);
-                TempData["SuccessMessage"] = "Wyniki zostały wysłane na Twój adres e-mail.";
+                string emailBody = $@"
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                        <h2 style='color: #1A2D41; text-align: center;'>Twoje wyniki: {formTitle}</h2>
+                        <p>Dziękujemy za wypełnienie kwestionariusza. Oto Twój profil motywacyjny:</p>
+                        
+                        <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
+
+                        <div style='margin-bottom: 15px;'>
+                            <strong>Potrzeba Osiągnięć:</strong> {percentAchievement}%
+                            <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin-top: 5px;'>
+                                <div style='width: {percentAchievement}%; background-color: #76FF03; height: 100%; border-radius: 5px;'></div>
+                            </div>
+                        </div>
+
+                        <div style='margin-bottom: 15px;'>
+                            <strong>Potrzeba Afiliacji:</strong> {percentAffiliation}%
+                            <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin-top: 5px;'>
+                                <div style='width: {percentAffiliation}%; background-color: #26A69A; height: 100%; border-radius: 5px;'></div>
+                            </div>
+                        </div>
+
+                        <div style='margin-bottom: 15px;'>
+                            <strong>Potrzeba Autonomii:</strong> {percentAutonomy}%
+                            <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin-top: 5px;'>
+                                <div style='width: {percentAutonomy}%; background-color: #FFF700; height: 100%; border-radius: 5px;'></div>
+                            </div>
+                        </div>
+
+                        <div style='margin-bottom: 15px;'>
+                            <strong>Potrzeba Dominacji:</strong> {percentDominance}%
+                            <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin-top: 5px;'>
+                                <div style='width: {percentDominance}%; background-color: #D32F2F; height: 100%; border-radius: 5px;'></div>
+                            </div>
+                        </div>
+
+                        <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
+                        <p style='text-align: center; font-size: 12px; color: #888;'>Wiadomość wygenerowana automatycznie przez system INeed.</p>
+                    </div>";
+
+                await _emailService.SendEmailAsync(email, $"Twój wynik: {formTitle}", emailBody);
+                TempData["SuccessMessage"] = "Wynik został wysłany na Twój adres e-mail.";
             }
-            catch (Exception)
+            catch
             {
-                TempData["ErrorMessage"] = "Wystąpił błąd podczas wysyłania e-maila. Spróbuj ponownie później.";
+                TempData["ErrorMessage"] = "Nie udało się wysłać wiadomości e-mail.";
             }
 
-            return RedirectToAction("Index", "Home");
-        }
+            // Przekazanie danych z powrotem do widoku, aby wykresy nie zniknęły
+            ViewBag.FormTitle = formTitle;
+            ViewBag.PercentAchievement = percentAchievement;
+            ViewBag.PercentAffiliation = percentAffiliation;
+            ViewBag.PercentAutonomy = percentAutonomy;
+            ViewBag.PercentDominance = percentDominance;
 
-        // --- METODA POMOCNICZA: GŁÓWNA LOGIKA OBLICZANIA WYNIKÓW ---
-        private async Task<IActionResult> ProcessFormSubmission(Guid id, IFormCollection formCollection)
-        {
-            var questionnaire = await _context.Forms
-                .Include(f => f.Questions)
-                .ThenInclude(q => q.Answers)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (questionnaire == null) return NotFound();
-
-            // --- DEFINICJA GRUP PYTAŃ ---
-            var groupAchievement = new[] { 1, 5, 9, 13, 17 };
-            var groupAffiliation = new[] { 2, 6, 10, 14 };
-            var groupAutonomy = new[] { 3, 7, 11, 15, 18 };
-            var groupDominance = new[] { 4, 8, 12, 16, 19 };
-
-            // Zmienne na wyniki
-            int scoreAchievement = 0, maxAchievement = 0;
-            int scoreAffiliation = 0, maxAffiliation = 0;
-            int scoreAutonomy = 0, maxAutonomy = 0;
-            int scoreDominance = 0, maxDominance = 0;
-
-            foreach (var question in questionnaire.Questions)
-            {
-                // Obliczamy max dla danego pytania
-                int maxQ = question.Answers.Any() ? question.Answers.Max(a => a.Score) : 0;
-                int points = 0;
-
-                // Sprawdzamy co zaznaczył użytkownik
-                string formKey = $"Question_{question.QuestionId}";
-                if (formCollection.ContainsKey(formKey))
-                {
-                    if (Guid.TryParse(formCollection[formKey], out Guid selectedAnswerId))
-                    {
-                        var answer = question.Answers.FirstOrDefault(a => a.AnswerId == selectedAnswerId);
-                        if (answer != null) points = answer.Score;
-                    }
-                }
-
-                // --- PRZYPISANIE DO GRUPY ---
-                if (groupAchievement.Contains(question.Number))
-                {
-                    scoreAchievement += points;
-                    maxAchievement += maxQ;
-                }
-                else if (groupAffiliation.Contains(question.Number))
-                {
-                    scoreAffiliation += points;
-                    maxAffiliation += maxQ;
-                }
-                else if (groupAutonomy.Contains(question.Number))
-                {
-                    scoreAutonomy += points;
-                    maxAutonomy += maxQ;
-                }
-                else if (groupDominance.Contains(question.Number))
-                {
-                    scoreDominance += points;
-                    maxDominance += maxQ;
-                }
-            }
-
-            // Przekazanie danych do widoku (ViewBag)
-            ViewBag.FormTitle = questionnaire.Title;
-
-            // Helper do obliczania procentów
-            double CalcPercent(int score, int max) => max > 0 ? Math.Round((double)score / max * 100, 0) : 0;
-
-            ViewBag.PercentAchievement = CalcPercent(scoreAchievement, maxAchievement);
-            ViewBag.PercentAffiliation = CalcPercent(scoreAffiliation, maxAffiliation);
-            ViewBag.PercentAutonomy = CalcPercent(scoreAutonomy, maxAutonomy);
-            ViewBag.PercentDominance = CalcPercent(scoreDominance, maxDominance);
-
-            // Zwracamy widok Result (musi znajdować się w Views/Questionnaire/Result.cshtml)
             return View("Result");
         }
     }

@@ -1,6 +1,9 @@
 ﻿@{
     ViewData["Title"] = "Wynik Ankiety";
     string title = ViewBag.FormTitle ?? "Wynik Ankiety";
+
+    // Odbieramy wartości bezpośrednio z ViewBag, które kontroler już obliczył
+    // Używamy nazw, które ustawiliśmy w QuestionnaireController.cs
     double pAch = ViewBag.PercentAchievement ?? 0;
     double pAff = ViewBag.PercentAffiliation ?? 0;
     double pAut = ViewBag.PercentAutonomy ?? 0;
@@ -79,6 +82,7 @@
                         <h5 class="fw-bold mb-3 text-dark text-center">Wyślij wynik na swój email</h5>
 
                         <form asp-action="SendResult" asp-controller="Questionnaire" method="post" class="d-flex flex-column align-items-center">
+                            @Html.AntiForgeryToken()
                             <input type="hidden" name="percentAchievement" value="@pAch" />
                             <input type="hidden" name="percentAffiliation" value="@pAff" />
                             <input type="hidden" name="percentAutonomy" value="@pAut" />
@@ -105,7 +109,6 @@
                             &larr; WRÓĆ DO STRONY GŁÓWNEJ
                         </a>
                     </div>
-
                 </div>
             </div>
         </div>
