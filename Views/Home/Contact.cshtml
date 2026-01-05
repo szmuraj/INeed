@@ -1,113 +1,60 @@
-﻿@{
-    ViewData["Title"] = "Kontakt";
+﻿@using INeed.Helpers
+@{
+    ViewData[AppConstants.Texts.Messages.Title] = AppConstants.Texts.Contact.PageTitle;
 }
 
 <div class="d-flex flex-column h-100">
-
     <div class="border-bottom border-white border-opacity-25 pb-3 mb-5">
-        <h2 class="fw-bold">Kontakt</h2>
-        <p class="text-white-50 mb-0">Masz pytania dotyczące systemu ocen? Jesteśmy do Twojej dyspozycji.</p>
+        <h2 class="fw-bold">@AppConstants.Texts.Contact.Header</h2>
+        <p class="text-white-50 mb-0">@AppConstants.Texts.Contact.SubHeader</p>
     </div>
 
-    @if (TempData["SuccessMessage"] != null)
+    @if (TempData[AppConstants.Texts.Messages.ContactSuccess] != null)
     {
-        <div class="col-lg-6 mx-auto mb-4">
-            <div class="alert alert-success border-0 shadow-sm" role="alert" style="border-radius: 10px;">
-                @TempData["SuccessMessage"]
-            </div>
-        </div>
+        <div class="col-lg-6 mx-auto mb-4"><div class="alert alert-success border-0 shadow-sm" style="border-radius: 10px;">@TempData[AppConstants.Texts.Messages.ContactSuccess]</div></div>
     }
-    @if (TempData["ErrorMessage"] != null)
+    @if (TempData[AppConstants.Texts.Messages.ContactError] != null)
     {
-        <div class="col-lg-6 mx-auto mb-4">
-            <div class="alert alert-danger border-0 shadow-sm" role="alert" style="border-radius: 10px;">
-                @TempData["ErrorMessage"]
-            </div>
-        </div>
+        <div class="col-lg-6 mx-auto mb-4"><div class="alert alert-danger border-0 shadow-sm" style="border-radius: 10px;">@TempData[AppConstants.Texts.Messages.ContactError]</div></div>
     }
 
     <div class="col-lg-6 mx-auto d-flex flex-column gap-4">
-
-        <div class="p-4 border border-secondary border-opacity-25 shadow-sm"
-             style="background-color: #F9FDF4; border-radius: 15px;">
-
+        <div class="p-4 border border-secondary border-opacity-25 shadow-sm" style="background-color: @AppConstants.Colors.BackgroundLight; border-radius: 15px;">
             <div class="d-flex align-items-center gap-4">
-                <div class="flex-shrink-0">
-                    <img src="~/images/Logo.png" alt="Logo INeed" style="max-width: 120px; height: auto;">
-                </div>
+                <div class="flex-shrink-0"><img src="~/images/Logo.png" alt="Logo" style="max-width: 120px; height: auto;"></div>
                 <div class="d-flex flex-column gap-2 text-dark">
-                    <div class="d-flex align-items-center gap-2 fw-bold fs-5">
-                        <i class="bi bi-building-fill text-primary"></i>
-                        <span>Biuro INeed</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-geo-alt-fill text-primary"></i>
-                        <span>al. Kilińskiego 12 p. 8</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-telephone-fill text-primary"></i>
-                        <span>661 121 122</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-envelope-fill text-primary"></i>
-                        <span>bok@ineed.com</span>
-                    </div>
+                    <div class="d-flex align-items-center gap-2 fw-bold fs-5"><i class="bi bi-building-fill text-primary"></i><span>@AppConstants.Texts.Contact.OfficeName</span></div>
+                    <div class="d-flex align-items-center gap-2"><i class="bi bi-geo-alt-fill text-primary"></i><span>@AppConstants.Texts.Contact.Address</span></div>
+                    <div class="d-flex align-items-center gap-2"><i class="bi bi-telephone-fill text-primary"></i><span>@AppConstants.Texts.Contact.Phone</span></div>
+                    <div class="d-flex align-items-center gap-2"><i class="bi bi-envelope-fill text-primary"></i><span>@AppConstants.Texts.Contact.Email</span></div>
                 </div>
             </div>
         </div>
 
-        <div class="p-4 border border-secondary border-opacity-25 shadow-sm"
-             style="background-color: #F9FDF4; border-radius: 15px;">
-
-            <h5 class="fw-bold mb-3 text-dark text-center">Napisz do nas</h5>
-
+        <div class="p-4 border border-secondary border-opacity-25 shadow-sm" style="background-color: @AppConstants.Colors.BackgroundLight; border-radius: 15px;">
+            <h5 class="fw-bold mb-3 text-dark text-center">@AppConstants.Texts.Contact.FormContactHeader</h5>
             <form asp-controller="Home" asp-action="SendMessage" method="post" class="d-flex flex-column align-items-center">
-
-                <div class="mb-3 w-75">
-                    <input type="email" name="email" class="form-control bg-white text-dark border-secondary border-opacity-25" placeholder="Twój email" required>
-                </div>
-
-                <div class="mb-3 w-75">
-                    <textarea name="message" class="form-control bg-white text-dark border-secondary border-opacity-25" rows="4" placeholder="Treść wiadomości..." required></textarea>
-                </div>
-
+                <div class="mb-3 w-75"><input type="email" name="email" class="form-control bg-white text-dark border-secondary border-opacity-25" placeholder="@AppConstants.Texts.Labels.YourEmailPlaceholder" required></div>
+                <div class="mb-3 w-75"><textarea name="message" class="form-control bg-white text-dark border-secondary border-opacity-25" rows="4" placeholder="@AppConstants.Texts.Labels.MessagePlaceholder" required></textarea></div>
                 <div class="mb-4 w-75">
                     <div class="form-check d-flex align-items-start gap-2">
                         <input class="form-check-input mt-1" type="checkbox" id="rodoConsent" name="rodoConsent" value="true" required style="cursor: pointer;">
                         <label class="form-check-label small text-muted lh-sm" for="rodoConsent" style="font-size: 0.8rem; cursor: pointer;">
-                            Wyrażam zgodę na przetwarzanie moich danych osobowych w celu obsługi zapytania.
-                            Administratorem danych jest INeed. Więcej w <a asp-action="Privacy" target="_blank" class="text-decoration-underline text-primary">Polityce Prywatności</a>.
+                            @AppConstants.Texts.Contact.RodoConsent <a asp-action="Privacy" target="_blank" class="text-decoration-underline text-primary">@AppConstants.Texts.Layout.PrivacyPolicy</a>.
                         </label>
                     </div>
                 </div>
-
-                <button type="submit" class="btn w-75 fw-bold py-2 shadow-sm"
-                        style="background-color: #FFF700; color: #000; border: none; border-radius: 10px;">
-                    WYŚLIJ WIADOMOŚĆ
-                </button>
+                <button type="submit" class="btn w-75 fw-bold py-2 shadow-sm" style="background-color: @AppConstants.Colors.ButtonSubmit; color: @AppConstants.Colors.Black; border: none; border-radius: 10px;">@AppConstants.Texts.Buttons.SendMessage</button>
             </form>
         </div>
 
-        <div class="p-4 border border-secondary border-opacity-25 shadow-sm"
-             style="background-color: #F9FDF4; border-radius: 15px;">
-
-            <h5 class="fw-bold mb-3 text-dark text-center">Formularz prośby usunięcia z Newslettera</h5>
-
+        <div class="p-4 border border-secondary border-opacity-25 shadow-sm" style="background-color: @AppConstants.Colors.BackgroundLight; border-radius: 15px;">
+            <h5 class="fw-bold mb-3 text-dark text-center">@AppConstants.Texts.Contact.FormUnsubscribeHeader</h5>
             <form id="unsubscribeForm" asp-action="Unsubscribe" asp-controller="Home" method="post" class="d-flex flex-column align-items-center">
-
-                <div class="mb-3 w-75">
-                    <input type="email" name="email" class="form-control bg-white text-dark border-secondary border-opacity-25 text-center"
-                           placeholder="adres@poczta.pl" aria-label="Adres email" required>
-                </div>
-
-                <button type="button" class="btn w-75 fw-bold py-2"
-                        style="background-color: #FF0000; color: #000; border: none; border-radius: 10px;"
-                        data-bs-toggle="modal" data-bs-target="#confirmModal">
-                    Usuń
-                </button>
+                <div class="mb-3 w-75"><input type="email" name="email" class="form-control bg-white text-dark border-secondary border-opacity-25 text-center" placeholder="@AppConstants.Texts.Labels.EmailPlaceholder" required></div>
+                <button type="button" class="btn w-75 fw-bold py-2" style="background-color: @AppConstants.Colors.ButtonDanger; color: @AppConstants.Colors.Black; border: none; border-radius: 10px;" data-bs-toggle="modal" data-bs-target="#confirmModal">@AppConstants.Texts.Buttons.Delete</button>
             </form>
         </div>
-
     </div>
 </div>
 
@@ -115,18 +62,10 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 15px; overflow: hidden;">
             <div class="modal-body text-center p-4">
-                <h4 class="fw-bold mb-4 text-dark">Czy jesteś pewien/pewna?</h4>
+                <h4 class="fw-bold mb-4 text-dark">@AppConstants.Texts.Contact.ModalTitle</h4>
                 <div class="d-flex justify-content-center gap-3">
-                    <button type="button" class="btn fw-bold px-4 py-2"
-                            style="background-color: #76FF03; color: #000; border: none; border-radius: 10px;"
-                            onclick="document.getElementById('unsubscribeForm').submit();">
-                        Usuń
-                    </button>
-                    <button type="button" class="btn fw-bold px-4 py-2"
-                            style="background-color: #FF0000; color: #000; border: none; border-radius: 10px;"
-                            data-bs-dismiss="modal">
-                        Wróć
-                    </button>
+                    <button type="button" class="btn fw-bold px-4 py-2" style="background-color: @AppConstants.Colors.ButtonAction; color: @AppConstants.Colors.Black; border: none; border-radius: 10px;" onclick="document.getElementById('unsubscribeForm').submit();">@AppConstants.Texts.Buttons.Delete</button>
+                    <button type="button" class="btn fw-bold px-4 py-2" style="background-color: @AppConstants.Colors.ButtonDanger; color: @AppConstants.Colors.Black; border: none; border-radius: 10px;" data-bs-dismiss="modal">@AppConstants.Texts.Buttons.Back</button>
                 </div>
             </div>
         </div>
