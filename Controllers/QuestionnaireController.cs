@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using INeed.Data;
@@ -26,11 +27,8 @@ namespace INeed.Controllers
         [HttpGet(AppConstants.Texts.FillRoute + "/{id}")]
         public async Task<IActionResult> Fill(Guid id)
         {
-            if (id == Guid.Empty) return NotFound();
-
             var form = await _context.Forms
-                .Include(f => f.Questions)
-                .ThenInclude(q => q.Answers)
+                .Include(f => f.Questions).ThenInclude(q => q.Answers)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (form == null || !form.IsActive) return NotFound();
@@ -42,27 +40,26 @@ namespace INeed.Controllers
         public async Task<IActionResult> Fill(Guid id, IFormCollection collection)
         {
             var questionnaire = await _context.Forms
-                .Include(f => f.Questions)
-                .ThenInclude(q => q.Answers)
+                .Include(f => f.Questions).ThenInclude(q => q.Answers)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (questionnaire == null) return NotFound();
 
-            // 1. Pobieramy wszystkie definicje kategorii (normy i kolory) z bazy
             var dbCategories = await _context.Categories.AsNoTracking().ToListAsync();
             var finalResult = new FinalResultVm { FormTitle = questionnaire.Title };
 
-            // 2. Grupowanie dynamiczne pytań po nazwie kategorii przypisanej w tabeli Questions
-            var questionsByCatName = questionnaire.Questions
-                .GroupBy(q => q.Category?.Trim() ?? AppConstants.Texts.Layout.Another);
+            // Sprawdzenie języka
+            bool isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
 
-            foreach (var group in questionsByCatName)
+            var groupedQuestions = questionnaire.Questions
+                .GroupBy(q => q.Category?.Trim() ?? "General");
+
+            foreach (var group in groupedQuestions)
             {
                 string catName = group.Key;
-
-                // Szukamy definicji w bazie danych pasującej do nazwy z pytania
                 var categoryDef = dbCategories.FirstOrDefault(c =>
-                    c.Name.Trim().Equals(catName, StringComparison.OrdinalIgnoreCase));
+                    c.Name.Trim().Equals(catName, StringComparison.OrdinalIgnoreCase) ||
+                    (c.NameEN != null && c.NameEN.Trim().Equals(catName, StringComparison.OrdinalIgnoreCase)));
 
                 int actualScore = 0;
                 int maxScore = 0;
@@ -76,26 +73,26 @@ namespace INeed.Controllers
                     }
                 }
 
-                // Obliczamy STENy tylko jeśli kategoria istnieje w tabeli Categories
                 int stenF = categoryDef != null ? CalculateSten(actualScore, categoryDef.StenNormsFemale) : 0;
                 int stenM = categoryDef != null ? CalculateSten(actualScore, categoryDef.StenNormsMale) : 0;
 
+                // Wybór nazwy kategorii zależnie od języka
+                string displayName = (isEn && categoryDef != null && !string.IsNullOrEmpty(categoryDef.NameEN))
+                                     ? categoryDef.NameEN
+                                     : (categoryDef?.Name ?? catName);
+
                 finalResult.Categories.Add(new CategoryResultVm
                 {
-                    CategoryName = catName,
-                    CategoryCode = categoryDef?.Code ?? "CUSTOM",
-                    Color = categoryDef?.Color ?? AppConstants.Colors.TextSecondary,
+                    CategoryName = displayName,
+                    Color = categoryDef?.Color ?? "#6c757d",
                     ScoreObtained = actualScore,
                     ScoreMax = maxScore,
                     StenFemale = stenF,
-                    DescFemale = GetStenDescription(stenF),
                     StenMale = stenM,
+                    DescFemale = GetStenDescription(stenF),
                     DescMale = GetStenDescription(stenM)
                 });
             }
-
-            // Opcjonalnie: Sortowanie kategorii alfabetycznie, aby wynik był przewidywalny
-            finalResult.Categories = finalResult.Categories.OrderBy(c => c.CategoryName).ToList();
 
             return View("Result", finalResult);
         }
@@ -107,9 +104,7 @@ namespace INeed.Controllers
             {
                 var thresholds = normsString.Split(',').Select(int.Parse).ToArray();
                 for (int i = 0; i < thresholds.Length; i++)
-                {
                     if (score <= thresholds[i]) return i + 1;
-                }
                 return 10;
             }
             catch { return 0; }
@@ -118,10 +113,10 @@ namespace INeed.Controllers
         private string GetStenDescription(int sten)
         {
             if (sten == 0) return "-";
-            if (sten >= 1 && sten <= 4) return "Niski";
-            if (sten >= 5 && sten <= 6) return "Przeciętny";
-            if (sten >= 7 && sten <= 10) return "Wysoki";
-            return "-";
+            bool isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
+            if (sten >= 1 && sten <= 4) return isEn ? "Low" : "Niski";
+            if (sten >= 5 && sten <= 6) return isEn ? "Average" : "Przeciętny";
+            return isEn ? "High" : "Wysoki";
         }
 
         [HttpPost]

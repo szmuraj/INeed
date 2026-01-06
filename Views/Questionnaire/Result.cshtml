@@ -1,8 +1,11 @@
 ﻿@using INeed.Helpers
+@using System.Globalization
 @model INeed.Models.ViewModels.FinalResultVm
 
 @{
     ViewData[AppConstants.Texts.Messages.Title] = Model.FormTitle;
+    // Wykrywanie języka [cite: 2]
+    var isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
 }
 
 <div class="container py-5">
@@ -19,12 +22,18 @@
         <div class="col-lg-8 text-center">
 
             <div class="card shadow-lg border-0 p-5 mb-5" style="border-radius: 20px;">
-                <h2 class="fw-bold mb-4">@AppConstants.Texts.Result.Header: @Model.FormTitle</h2>
-                <p class="text-muted mb-5">@AppConstants.Texts.Result.SubHeader</p>
+                <h2 class="fw-bold mb-4">
+                    @(isEn ? "Results" : AppConstants.Texts.Result.Header): @Model.FormTitle
+                </h2>
+                <p class="text-muted mb-5">
+                    @(isEn ? "Below you will find your detailed profile." : AppConstants.Texts.Result.SubHeader)
+                </p>
 
                 @if (!Model.Categories.Any())
                 {
-                    <div class="alert alert-warning">Brak danych. Sprawdź czy pytania mają przypisane kategorie.</div>
+                    <div class="alert alert-warning">
+                        @(isEn ? "No data. Check if questions have categories assigned." : "Brak danych. Sprawdź czy pytania mają przypisane kategorie.")
+                    </div>
                 }
 
                 @foreach (var cat in Model.Categories)
@@ -36,20 +45,24 @@
                         </div>
 
                         <div class="progress mb-3" style="height: 15px; border-radius: 8px; background-color: #f0f0f0;">
-                            <div class="progress-bar" role="progressbar" style="width: @cat.Percent.ToString("0")%; background-color: @cat.Color; border-radius: 8px;"></div>
+                            <div class="progress-bar" role="progressbar" style="width: @cat.Percent.ToString("0", CultureInfo.InvariantCulture)%; background-color: @cat.Color; border-radius: 8px;"></div>
                         </div>
 
                         <div class="row g-2">
                             <div class="col-6">
                                 <div class="p-3 border rounded bg-light text-center h-100">
-                                    <small class="text-uppercase text-muted d-block mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">Kobieta</small>
+                                    <small class="text-uppercase text-muted d-block mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">
+                                        @(isEn ? "Woman" : "Kobieta")
+                                    </small>
                                     <div class="fw-bold text-dark fs-5 mb-0">STEN: @cat.StenFemale</div>
                                     <small class="d-block mt-1 text-primary fw-bold">@cat.DescFemale</small>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="p-3 border rounded bg-light text-center h-100">
-                                    <small class="text-uppercase text-muted d-block mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">Mężczyzna</small>
+                                    <small class="text-uppercase text-muted d-block mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">
+                                        @(isEn ? "Man" : "Mężczyzna")
+                                    </small>
                                     <div class="fw-bold text-dark fs-5 mb-0">STEN: @cat.StenMale</div>
                                     <small class="d-block mt-1 text-primary fw-bold">@cat.DescMale</small>
                                 </div>
@@ -60,14 +73,17 @@
             </div>
 
             <div class="card shadow-sm border-0 p-5" style="border-radius: 20px; background-color: @AppConstants.Colors.BackgroundLight;">
-                <h4 class="fw-bold mb-3">@AppConstants.Texts.Result.SaveHeader</h4>
-                <p class="text-muted mb-4">@AppConstants.Texts.Result.SaveSubHeader</p>
+                <h4 class="fw-bold mb-3">
+                    @(isEn ? "Save your result" : AppConstants.Texts.Result.SaveHeader)
+                </h4>
+                <p class="text-muted mb-4">
+                    @(isEn ? "Enter your email to receive the report." : AppConstants.Texts.Result.SaveSubHeader)
+                </p>
 
                 <form asp-action="SendResult" asp-controller="Questionnaire" method="post" class="d-flex flex-column align-items-center">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="FormTitle" />
 
-                    @* Dynamiczne generowanie ukrytych pól dla każdej kategorii *@
                     @for (int i = 0; i < Model.Categories.Count; i++)
                     {
                         <input type="hidden" asp-for="Categories[i].CategoryName" />
@@ -82,23 +98,36 @@
                     }
 
                     <div class="mb-3 w-75">
-                        <input type="email" name="email" class="form-control bg-white text-dark border-secondary border-opacity-25 text-center" placeholder="@AppConstants.Texts.Labels.EmailPlaceholder" required>
+                        <input type="email" name="email" class="form-control bg-white text-dark border-secondary border-opacity-25 text-center" placeholder="@(isEn ? "Your e-mail address" : AppConstants.Texts.Labels.EmailPlaceholder)" required>
                     </div>
 
                     <div class="mb-4 w-75 text-start">
                         <div class="form-check d-flex align-items-start gap-2">
                             <input class="form-check-input mt-1" type="checkbox" id="rodoConsent" name="rodoConsent" value="true" required style="cursor: pointer;">
                             <label class="form-check-label small text-muted lh-sm" for="rodoConsent" style="font-size: 0.8rem; cursor: pointer;">
-                                @AppConstants.Texts.Result.RodoConsent <a asp-controller="Home" asp-action="Privacy" target="_blank" class="text-decoration-underline text-primary">@AppConstants.Texts.Layout.PrivacyPolicy</a> @AppConstants.Texts.Result.And <a asp-controller="Home" asp-action="Terms" target="_blank" class="text-decoration-underline text-primary">@AppConstants.Texts.Layout.Terms</a> @AppConstants.Texts.Result.AcceptTerms
+                                @(isEn ? "I accept the " : AppConstants.Texts.Result.RodoConsent)
+                                <a asp-controller="Home" asp-action="Privacy" target="_blank" class="text-decoration-underline text-primary">
+                                    @(isEn ? "Privacy Policy" : AppConstants.Texts.Layout.PrivacyPolicy)
+                                </a>
+                                @(isEn ? " and " : AppConstants.Texts.Result.And)
+                                <a asp-controller="Home" asp-action="Terms" target="_blank" class="text-decoration-underline text-primary">
+                                    @(isEn ? "Terms" : AppConstants.Texts.Layout.Terms)
+                                </a>.
                             </label>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn w-75 fw-bold py-2 mb-2 shadow-sm" style="background-color: @AppConstants.Colors.Primary; color: #fff; border: none; border-radius: 10px;">@AppConstants.Texts.Buttons.SendResults</button>
+                    <button type="submit" class="btn w-75 fw-bold py-2 mb-2 shadow-sm" style="background-color: @AppConstants.Colors.Primary; color: #fff; border: none; border-radius: 10px;">
+                        @(isEn ? "Send Results" : AppConstants.Texts.Buttons.SendResults)
+                    </button>
                 </form>
             </div>
 
-            <div class="mt-5"><a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark fw-bold px-5 py-3" style="border-radius: 10px;">@AppConstants.Texts.Buttons.BackToHome</a></div>
+            <div class="mt-5">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark fw-bold px-5 py-3" style="border-radius: 10px;">
+                    @(isEn ? "Back to Home" : AppConstants.Texts.Buttons.BackToHome)
+                </a>
+            </div>
         </div>
     </div>
 </div>
