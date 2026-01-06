@@ -1,3 +1,5 @@
+// Ignore Spelling: rodo
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using INeed.Data;

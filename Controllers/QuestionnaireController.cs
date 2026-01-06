@@ -18,8 +18,6 @@ namespace INeed.Controllers
             _emailService = emailService;
         }
 
-        // POPRAWKA: Łączenie stałych za pomocą '+' tworzy wyrażenie stałe, które jest dozwolone w atrybutach.
-        // Usunięto klamry {} wokół stałej, bo to nie jest parametr trasy, tylko część ścieżki.
         [HttpGet(AppConstants.Texts.FillRoute + "/{id}")]
         public async Task<IActionResult> Fill(Guid id)
         {
@@ -36,7 +34,6 @@ namespace INeed.Controllers
             return View(form);
         }
 
-        // POPRAWKA: Analogicznie dla metody POST
         [HttpPost(AppConstants.Texts.FillRoute + "/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Fill(Guid id, IFormCollection collection)
@@ -49,6 +46,11 @@ namespace INeed.Controllers
             if (questionnaire == null) return NotFound();
 
             var scores = new Dictionary<string, (int actual, int max)>();
+            scores[AppConstants.Texts.Labels.AchievementShort] = (0, 0);
+            scores[AppConstants.Texts.Labels.AffiliationShort] = (0, 0);
+            scores[AppConstants.Texts.Labels.AutonomyShort] = (0, 0);
+            scores[AppConstants.Texts.Labels.DominanceShort] = (0, 0);
+
             foreach (var q in questionnaire.Questions)
             {
                 string cat = string.IsNullOrEmpty(q.Category) ? AppConstants.Texts.Layout.Another : q.Category.Trim().ToUpper();
@@ -66,19 +68,42 @@ namespace INeed.Controllers
             }
 
             ViewBag.FormTitle = questionnaire.Title;
-            ViewBag.PercentAchievement = CalculatePercent(scores, AppConstants.Texts.Labels.AchievementShort);
-            ViewBag.PercentAffiliation = CalculatePercent(scores, AppConstants.Texts.Labels.AffiliationShort);
-            ViewBag.PercentAutonomy = CalculatePercent(scores, AppConstants.Texts.Labels.AutonomyShort);
-            ViewBag.PercentDominance = CalculatePercent(scores, AppConstants.Texts.Labels.DominanceShort);
 
-            // Zwracamy widok z wynikami (korzystając ze stałej "Result")
+            var ach = scores[AppConstants.Texts.Labels.AchievementShort];
+            var aff = scores[AppConstants.Texts.Labels.AffiliationShort];
+            var aut = scores[AppConstants.Texts.Labels.AutonomyShort];
+            var dom = scores[AppConstants.Texts.Labels.DominanceShort];
+
+            // Obliczanie STEN
+            int achStenF = StenHelper.GetSten(StenCategory.Achievement, ach.actual, false);
+            int achStenM = StenHelper.GetSten(StenCategory.Achievement, ach.actual, true);
+
+            int affStenF = StenHelper.GetSten(StenCategory.Affiliation, aff.actual, false);
+            int affStenM = StenHelper.GetSten(StenCategory.Affiliation, aff.actual, true);
+
+            int autStenF = StenHelper.GetSten(StenCategory.Autonomy, aut.actual, false);
+            int autStenM = StenHelper.GetSten(StenCategory.Autonomy, aut.actual, true);
+
+            int domStenF = StenHelper.GetSten(StenCategory.Dominance, dom.actual, false);
+            int domStenM = StenHelper.GetSten(StenCategory.Dominance, dom.actual, true);
+
+            ViewBag.AchVal = ach.actual; ViewBag.AchMax = ach.max; ViewBag.AchStenF = achStenF; ViewBag.AchStenM = achStenM;
+            ViewBag.AffVal = aff.actual; ViewBag.AffMax = aff.max; ViewBag.AffStenF = affStenF; ViewBag.AffStenM = affStenM;
+            ViewBag.AutVal = aut.actual; ViewBag.AutMax = aut.max; ViewBag.AutStenF = autStenF; ViewBag.AutStenM = autStenM;
+            ViewBag.DomVal = dom.actual; ViewBag.DomMax = dom.max; ViewBag.DomStenF = domStenF; ViewBag.DomStenM = domStenM;
+
             return View(AppConstants.Texts.Messages.Result);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendResult(
-            string email, double percentAchievement, double percentAffiliation, double percentAutonomy, double percentDominance, string formTitle)
+            string email,
+            int achVal, int achMax, int achStenF, int achStenM,
+            int affVal, int affMax, int affStenF, int affStenM,
+            int autVal, int autMax, int autStenF, int autStenM,
+            int domVal, int domMax, int domStenF, int domStenM,
+            string formTitle)
         {
             if (string.IsNullOrEmpty(email)) return RedirectToAction(AppConstants.Texts.Messages.Index, AppConstants.Texts.Messages.Home);
 
@@ -100,13 +125,13 @@ namespace INeed.Controllers
                     <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
                         <h2 style='color: {AppConstants.Colors.Primary}; text-align: center;'>{AppConstants.Texts.Messages.YourResults} {formTitle}</h2>
                         <p>{AppConstants.Texts.Messages.EmailThanks}</p>
-                        
+                         
                         <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
 
-                        {GenerateProgressBar(AppConstants.Texts.Labels.Achievement, percentAchievement, AppConstants.Colors.Achievement)}
-                        {GenerateProgressBar(AppConstants.Texts.Labels.Affiliation, percentAffiliation, AppConstants.Colors.Affiliation)}
-                        {GenerateProgressBar(AppConstants.Texts.Labels.Autonomy, percentAutonomy, AppConstants.Colors.Autonomy)}
-                        {GenerateProgressBar(AppConstants.Texts.Labels.Dominance, percentDominance, AppConstants.Colors.Dominance)}
+                        {GenerateResultBlock(AppConstants.Texts.Labels.Achievement, achVal, achMax, achStenF, achStenM, AppConstants.Colors.Achievement)}
+                        {GenerateResultBlock(AppConstants.Texts.Labels.Affiliation, affVal, affMax, affStenF, affStenM, AppConstants.Colors.Affiliation)}
+                        {GenerateResultBlock(AppConstants.Texts.Labels.Autonomy, autVal, autMax, autStenF, autStenM, AppConstants.Colors.Autonomy)}
+                        {GenerateResultBlock(AppConstants.Texts.Labels.Dominance, domVal, domMax, domStenF, domStenM, AppConstants.Colors.Dominance)}
 
                         <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
                         <p style='text-align: center; font-size: 12px; color: #888;'>{AppConstants.Texts.Messages.GeneratedBy}</p>
@@ -121,26 +146,33 @@ namespace INeed.Controllers
             }
 
             ViewBag.FormTitle = formTitle;
-            ViewBag.PercentAchievement = percentAchievement;
-            ViewBag.PercentAffiliation = percentAffiliation;
-            ViewBag.PercentAutonomy = percentAutonomy;
-            ViewBag.PercentDominance = percentDominance;
+
+            ViewBag.AchVal = achVal; ViewBag.AchMax = achMax; ViewBag.AchStenF = achStenF; ViewBag.AchStenM = achStenM;
+            ViewBag.AffVal = affVal; ViewBag.AffMax = affMax; ViewBag.AffStenF = affStenF; ViewBag.AffStenM = affStenM;
+            ViewBag.AutVal = autVal; ViewBag.AutMax = autMax; ViewBag.AutStenF = autStenF; ViewBag.AutStenM = autStenM;
+            ViewBag.DomVal = domVal; ViewBag.DomMax = domMax; ViewBag.DomStenF = domStenF; ViewBag.DomStenM = domStenM;
 
             return View(AppConstants.Texts.Messages.Result);
         }
 
-        private double CalculatePercent(Dictionary<string, (int actual, int max)> scores, string key)
+        private string GenerateResultBlock(string label, int actual, int max, int stenF, int stenM, string color)
         {
-            return scores.TryGetValue(key, out var s) && s.max > 0 ? Math.Round((double)s.actual / s.max * 100) : 0;
-        }
+            double percent = max > 0 ? (double)actual / max * 100 : 0;
+            string descF = StenHelper.GetDescription(stenF);
+            string descM = StenHelper.GetDescription(stenM);
 
-        private string GenerateProgressBar(string label, double percent, string color)
-        {
             return $@"
-                <div style='margin-bottom: 15px;'>
-                    <strong>{label}:</strong> {percent}%
-                    <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin-top: 5px;'>
-                        <div style='width: {percent}%; background-color: {color}; height: 100%; border-radius: 5px;'></div>
+                <div style='margin-bottom: 25px;'>
+                    <div style='display: flex; justify-content: space-between; align-items: baseline;'>
+                        <strong style='font-size: 1.1em;'>{label}</strong>
+                        <span style='font-weight: bold;'>{actual}/{max}</span>
+                    </div>
+                    <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin: 5px 0 10px 0;'>
+                        <div style='width: {percent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}%; background-color: {color}; height: 100%; border-radius: 5px;'></div>
+                    </div>
+                    <div style='font-size: 0.9em; color: #555; background-color: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #eee;'>
+                        <div style='margin-bottom: 4px;'><strong>Kobieta:</strong> STEN {stenF} ({descF})</div>
+                        <div><strong>Mężczyzna:</strong> STEN {stenM} ({descM})</div>
                     </div>
                 </div>";
         }

@@ -97,14 +97,16 @@
                     </div>
                 </div>
             </main>
+
             <footer class="bg-white border-top text-muted mt-auto">
                 <div class="container-fluid p-3 text-center">
-                    &copy; 2025 - @AppConstants.Texts.CompanyName -
-                    <a asp-controller="Home" asp-action="Terms" class="text-decoration-none me-3" style="color: @AppConstants.Colors.Accent;">
-                        @AppConstants.Texts.Layout.Terms
+                    &copy; 2026 - @AppConstants.Texts.CompanyName -
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">
+                        @INeed.Helpers.AppConstants.Texts.Layout.PrivacyPolicy
                     </a>
-                    <a asp-controller="Home" asp-action="Privacy" class="text-decoration-none" style="color: @AppConstants.Colors.Accent;">
-                        @AppConstants.Texts.Layout.PrivacyPolicy
+                    |
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">
+                        @INeed.Helpers.AppConstants.Texts.Layout.Terms
                     </a>
                 </div>
             </footer>
@@ -119,7 +121,7 @@
                     <h5 class="fw-bold mb-1" style="color: @AppConstants.Colors.ButtonSubmit;">@AppConstants.Texts.Layout.CookieHeader</h5>
                     <p class="mb-0 small opacity-75">
                         @AppConstants.Texts.Layout.CookieBody
-                        <a asp-controller="Home" asp-action="Privacy" class="text-white text-decoration-underline">@AppConstants.Texts.Layout.PrivacyPolicy</a>.
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal" class="text-white text-decoration-underline">@AppConstants.Texts.Layout.PrivacyPolicy</a>.
                     </p>
                 </div>
                 <div class="d-flex gap-2 flex-shrink-0">
@@ -143,6 +145,41 @@
             });
         });
     </script>
+
+    <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="privacyModalLabel">@INeed.Helpers.AppConstants.Texts.Layout.PrivacyPolicy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                </div>
+                <div class="modal-body text-dark" style="text-align: left;">
+                    @Html.Raw(INeed.Helpers.AppConstants.Texts.PolicyContent.PrivacyAndCookies)
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel">@INeed.Helpers.AppConstants.Texts.Layout.Terms</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                </div>
+                <div class="modal-body text-dark" style="text-align: left;">
+                    @Html.Raw(INeed.Helpers.AppConstants.Texts.PolicyContent.Terms)
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
