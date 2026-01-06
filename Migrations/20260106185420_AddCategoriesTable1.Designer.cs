@@ -4,6 +4,7 @@ using INeed.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace INeed.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260106185420_AddCategoriesTable1")]
+    partial class AddCategoriesTable1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -56,18 +59,13 @@ namespace INeed.Migrations
 
             modelBuilder.Entity("INeed.Models.Category", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("CategoryId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -81,7 +79,7 @@ namespace INeed.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("CategoryId");
 
                     b.ToTable("Categories");
                 });
@@ -131,6 +129,9 @@ namespace INeed.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("FormId")
                         .HasColumnType("uniqueidentifier");
 
@@ -143,6 +144,8 @@ namespace INeed.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.HasKey("QuestionId");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("FormId");
 
@@ -387,6 +390,10 @@ namespace INeed.Migrations
 
             modelBuilder.Entity("INeed.Models.Question", b =>
                 {
+                    b.HasOne("INeed.Models.Category", null)
+                        .WithMany("Questions")
+                        .HasForeignKey("CategoryId");
+
                     b.HasOne("INeed.Models.Form", "Form")
                         .WithMany("Questions")
                         .HasForeignKey("FormId")
@@ -445,6 +452,11 @@ namespace INeed.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("INeed.Models.Category", b =>
+                {
+                    b.Navigation("Questions");
                 });
 
             modelBuilder.Entity("INeed.Models.Form", b =>

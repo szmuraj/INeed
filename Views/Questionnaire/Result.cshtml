@@ -1,30 +1,8 @@
 ﻿@using INeed.Helpers
+@model INeed.Models.ViewModels.FinalResultVm
+
 @{
-    ViewData[AppConstants.Texts.Messages.Title] = AppConstants.Texts.Result.PageTitle;
-
-    // Pobranie danych
-    int achVal = (int)(ViewBag.AchVal ?? 0); int achMax = (int)(ViewBag.AchMax ?? 0);
-    int achStenF = (int)(ViewBag.AchStenF ?? 0); int achStenM = (int)(ViewBag.AchStenM ?? 0);
-
-    int affVal = (int)(ViewBag.AffVal ?? 0); int affMax = (int)(ViewBag.AffMax ?? 0);
-    int affStenF = (int)(ViewBag.AffStenF ?? 0); int affStenM = (int)(ViewBag.AffStenM ?? 0);
-
-    int autVal = (int)(ViewBag.AutVal ?? 0); int autMax = (int)(ViewBag.AutMax ?? 0);
-    int autStenF = (int)(ViewBag.AutStenF ?? 0); int autStenM = (int)(ViewBag.AutStenM ?? 0);
-
-    int domVal = (int)(ViewBag.DomVal ?? 0); int domMax = (int)(ViewBag.DomMax ?? 0);
-    int domStenF = (int)(ViewBag.DomStenF ?? 0); int domStenM = (int)(ViewBag.DomStenM ?? 0);
-
-    double GetPercent(int val, int max) => max > 0 ? (double)val / max * 100 : 0;
-
-    var results = new[] {
-        (Label: AppConstants.Texts.Labels.Achievement, Val: achVal, Max: achMax, StenF: achStenF, StenM: achStenM, Percent: GetPercent(achVal, achMax), Color: AppConstants.Colors.Achievement),
-        (Label: AppConstants.Texts.Labels.Affiliation, Val: affVal, Max: affMax, StenF: affStenF, StenM: affStenM, Percent: GetPercent(affVal, affMax), Color: AppConstants.Colors.Affiliation),
-        (Label: AppConstants.Texts.Labels.Autonomy,    Val: autVal, Max: autMax, StenF: autStenF, StenM: autStenM, Percent: GetPercent(autVal, autMax), Color: AppConstants.Colors.Autonomy),
-        (Label: AppConstants.Texts.Labels.Dominance,    Val: domVal, Max: domMax, StenF: domStenF, StenM: domStenM, Percent: GetPercent(domVal, domMax), Color: AppConstants.Colors.Dominance)
-    };
-
-    string title = ViewBag.FormTitle as string ?? AppConstants.Texts.Messages.Wyniki;
+    ViewData[AppConstants.Texts.Messages.Title] = Model.FormTitle;
 }
 
 <div class="container py-5">
@@ -39,35 +17,41 @@
 
     <div class="row justify-content-center">
         <div class="col-lg-8 text-center">
+
             <div class="card shadow-lg border-0 p-5 mb-5" style="border-radius: 20px;">
-                <h2 class="fw-bold mb-4">@AppConstants.Texts.Result.Header</h2>
+                <h2 class="fw-bold mb-4">@AppConstants.Texts.Result.Header: @Model.FormTitle</h2>
                 <p class="text-muted mb-5">@AppConstants.Texts.Result.SubHeader</p>
 
-                @foreach (var res in results)
+                @if (!Model.Categories.Any())
+                {
+                    <div class="alert alert-warning">Brak danych. Sprawdź czy pytania mają przypisane kategorie.</div>
+                }
+
+                @foreach (var cat in Model.Categories)
                 {
                     <div class="mb-5 text-start">
                         <div class="d-flex justify-content-between align-items-end mb-2">
-                            <span class="text-uppercase fw-bold" style="font-size: 1rem; color: #333;">@res.Label</span>
-                            <span class="fw-bold fs-5">@res.Val <span class="text-muted fs-6 fw-normal">/ @res.Max</span></span>
+                            <span class="text-uppercase fw-bold" style="font-size: 1rem; color: #333;">@cat.CategoryName</span>
+                            <span class="fw-bold fs-5">@cat.ScoreObtained <span class="text-muted fs-6 fw-normal">/ @cat.ScoreMax</span></span>
                         </div>
 
                         <div class="progress mb-3" style="height: 15px; border-radius: 8px; background-color: #f0f0f0;">
-                            <div class="progress-bar" role="progressbar" style="width: @res.Percent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%; background-color: @res.Color; border-radius: 8px;"></div>
+                            <div class="progress-bar" role="progressbar" style="width: @cat.Percent.ToString("0")%; background-color: @cat.Color; border-radius: 8px;"></div>
                         </div>
 
                         <div class="row g-2">
                             <div class="col-6">
                                 <div class="p-3 border rounded bg-light text-center h-100">
                                     <small class="text-uppercase text-muted d-block mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">Kobieta</small>
-                                    <div class="fw-bold text-dark fs-5 mb-0">STEN: @res.StenF</div>
-                                    <small class="d-block mt-1 text-primary fw-bold">@StenHelper.GetDescription(res.StenF)</small>
+                                    <div class="fw-bold text-dark fs-5 mb-0">STEN: @cat.StenFemale</div>
+                                    <small class="d-block mt-1 text-primary fw-bold">@cat.DescFemale</small>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="p-3 border rounded bg-light text-center h-100">
                                     <small class="text-uppercase text-muted d-block mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">Mężczyzna</small>
-                                    <div class="fw-bold text-dark fs-5 mb-0">STEN: @res.StenM</div>
-                                    <small class="d-block mt-1 text-primary fw-bold">@StenHelper.GetDescription(res.StenM)</small>
+                                    <div class="fw-bold text-dark fs-5 mb-0">STEN: @cat.StenMale</div>
+                                    <small class="d-block mt-1 text-primary fw-bold">@cat.DescMale</small>
                                 </div>
                             </div>
                         </div>
@@ -78,23 +62,29 @@
             <div class="card shadow-sm border-0 p-5" style="border-radius: 20px; background-color: @AppConstants.Colors.BackgroundLight;">
                 <h4 class="fw-bold mb-3">@AppConstants.Texts.Result.SaveHeader</h4>
                 <p class="text-muted mb-4">@AppConstants.Texts.Result.SaveSubHeader</p>
+
                 <form asp-action="SendResult" asp-controller="Questionnaire" method="post" class="d-flex flex-column align-items-center">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" name="achVal" value="@achVal" /><input type="hidden" name="achMax" value="@achMax" />
-                    <input type="hidden" name="achStenF" value="@achStenF" /><input type="hidden" name="achStenM" value="@achStenM" />
+                    <input type="hidden" asp-for="FormTitle" />
 
-                    <input type="hidden" name="affVal" value="@affVal" /><input type="hidden" name="affMax" value="@affMax" />
-                    <input type="hidden" name="affStenF" value="@affStenF" /><input type="hidden" name="affStenM" value="@affStenM" />
+                    @* Dynamiczne generowanie ukrytych pól dla każdej kategorii *@
+                    @for (int i = 0; i < Model.Categories.Count; i++)
+                    {
+                        <input type="hidden" asp-for="Categories[i].CategoryName" />
+                        <input type="hidden" asp-for="Categories[i].CategoryCode" />
+                        <input type="hidden" asp-for="Categories[i].Color" />
+                        <input type="hidden" asp-for="Categories[i].ScoreObtained" />
+                        <input type="hidden" asp-for="Categories[i].ScoreMax" />
+                        <input type="hidden" asp-for="Categories[i].StenFemale" />
+                        <input type="hidden" asp-for="Categories[i].DescFemale" />
+                        <input type="hidden" asp-for="Categories[i].StenMale" />
+                        <input type="hidden" asp-for="Categories[i].DescMale" />
+                    }
 
-                    <input type="hidden" name="autVal" value="@autVal" /><input type="hidden" name="autMax" value="@autMax" />
-                    <input type="hidden" name="autStenF" value="@autStenF" /><input type="hidden" name="autStenM" value="@autStenM" />
+                    <div class="mb-3 w-75">
+                        <input type="email" name="email" class="form-control bg-white text-dark border-secondary border-opacity-25 text-center" placeholder="@AppConstants.Texts.Labels.EmailPlaceholder" required>
+                    </div>
 
-                    <input type="hidden" name="domVal" value="@domVal" /><input type="hidden" name="domMax" value="@domMax" />
-                    <input type="hidden" name="domStenF" value="@domStenF" /><input type="hidden" name="domStenM" value="@domStenM" />
-
-                    <input type="hidden" name="formTitle" value="@title" />
-
-                    <div class="mb-3 w-75"><input type="email" name="email" id="userEmail" class="form-control bg-white text-dark border-secondary border-opacity-25 text-center" placeholder="@AppConstants.Texts.Labels.EmailPlaceholder" required></div>
                     <div class="mb-4 w-75 text-start">
                         <div class="form-check d-flex align-items-start gap-2">
                             <input class="form-check-input mt-1" type="checkbox" id="rodoConsent" name="rodoConsent" value="true" required style="cursor: pointer;">
@@ -103,9 +93,11 @@
                             </label>
                         </div>
                     </div>
+
                     <button type="submit" class="btn w-75 fw-bold py-2 mb-2 shadow-sm" style="background-color: @AppConstants.Colors.Primary; color: #fff; border: none; border-radius: 10px;">@AppConstants.Texts.Buttons.SendResults</button>
                 </form>
             </div>
+
             <div class="mt-5"><a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark fw-bold px-5 py-3" style="border-radius: 10px;">@AppConstants.Texts.Buttons.BackToHome</a></div>
         </div>
     </div>

@@ -1,7 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using INeed.Data;
 using INeed.Models;
+using INeed.Models.ViewModels;
 using INeed.Services;
 using INeed.Helpers;
 
@@ -28,9 +33,7 @@ namespace INeed.Controllers
                 .ThenInclude(q => q.Answers)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (form == null) return NotFound();
-            if (!form.IsActive) return Content(AppConstants.Texts.Fill.InactiveForm);
-
+            if (form == null || !form.IsActive) return NotFound();
             return View(form);
         }
 
@@ -38,6 +41,7 @@ namespace INeed.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Fill(Guid id, IFormCollection collection)
         {
+            // 1. Pobieramy formularz
             var questionnaire = await _context.Forms
                 .Include(f => f.Questions)
                 .ThenInclude(q => q.Answers)
@@ -45,99 +49,168 @@ namespace INeed.Controllers
 
             if (questionnaire == null) return NotFound();
 
-            var scores = new Dictionary<string, (int actual, int max)>();
-            scores[AppConstants.Texts.Labels.AchievementShort] = (0, 0);
-            scores[AppConstants.Texts.Labels.AffiliationShort] = (0, 0);
-            scores[AppConstants.Texts.Labels.AutonomyShort] = (0, 0);
-            scores[AppConstants.Texts.Labels.DominanceShort] = (0, 0);
+            // 2. DYNAMICZNE POBRANIE KATEGORII Z BAZY
+            // AsNoTracking przyspiesza odczyt, bo nie będziemy modyfikować tych danych
+            var dbCategories = await _context.Categories.AsNoTracking().ToListAsync();
 
-            foreach (var q in questionnaire.Questions)
+            var finalResult = new FinalResultVm { FormTitle = questionnaire.Title };
+
+            // 3. Grupowanie pytań po nazwie kategorii z modelu Question
+            var questionsByCatName = questionnaire.Questions
+                .GroupBy(q => q.Category?.Trim() ?? "Pozostałe");
+
+            foreach (var group in questionsByCatName)
             {
-                string cat = string.IsNullOrEmpty(q.Category) ? AppConstants.Texts.Layout.Another : q.Category.Trim().ToUpper();
-                if (!scores.ContainsKey(cat)) scores[cat] = (0, 0);
+                string catName = group.Key; // np. "Ach", "Potrzeba Osiągnięć"
 
-                int maxQ = q.Answers.Any() ? q.Answers.Max(a => a.Score) : 0;
-                int actualQ = 0;
-                if (collection.TryGetValue($"Question_{q.QuestionId}", out var val) && Guid.TryParse(val, out Guid aId))
+                // 4. INTELIGENTNE DOPASOWANIE (Pytanie <-> Baza)
+                var categoryDef = dbCategories.FirstOrDefault(c =>
+                    c.Name.Trim().Equals(catName, StringComparison.OrdinalIgnoreCase) ||
+                    c.Name.Contains(catName, StringComparison.OrdinalIgnoreCase) ||
+                    catName.Contains(c.Name, StringComparison.OrdinalIgnoreCase));
+
+                // Fallback: Rozpoznawanie po kodach/skrótach jeśli nazwy się różnią
+                if (categoryDef == null)
                 {
-                    actualQ = q.Answers.FirstOrDefault(a => a.AnswerId == aId)?.Score ?? 0;
+                    string uName = catName.ToUpper();
+                    if (uName.Contains("ACH") || uName.Contains("OSIĄG"))
+                        categoryDef = dbCategories.FirstOrDefault(c => c.Code == "ACHIEVEMENT");
+                    else if (uName.Contains("AFF") || uName.Contains("AFIL"))
+                        categoryDef = dbCategories.FirstOrDefault(c => c.Code == "AFFILIATION");
+                    else if (uName.Contains("AUT"))
+                        categoryDef = dbCategories.FirstOrDefault(c => c.Code == "AUTONOMY");
+                    else if (uName.Contains("DOM"))
+                        categoryDef = dbCategories.FirstOrDefault(c => c.Code == "DOMINANCE");
                 }
 
-                var current = scores[cat];
-                scores[cat] = (current.actual + actualQ, current.max + maxQ);
+                int actualScore = 0;
+                int maxScore = 0;
+
+                foreach (var q in group)
+                {
+                    int maxQ = q.Answers.Any() ? q.Answers.Max(a => a.Score) : 0;
+                    maxScore += maxQ;
+
+                    if (collection.TryGetValue($"Question_{q.QuestionId}", out var val) && Guid.TryParse(val, out Guid aId))
+                    {
+                        actualScore += q.Answers.FirstOrDefault(a => a.AnswerId == aId)?.Score ?? 0;
+                    }
+                }
+
+                // Wartości domyślne
+                int stenF = 0, stenM = 0;
+                string descF = "-", descM = "-";
+                string color = "#6c757d"; // Szary
+                string code = "UNKNOWN";
+                string displayName = catName;
+
+                // 5. OBLICZANIE NA PODSTAWIE DANYCH Z BAZY
+                if (categoryDef != null)
+                {
+                    displayName = categoryDef.Name; // Używamy poprawnej nazwy z bazy
+                    code = categoryDef.Code;
+
+                    // STENy z bazy
+                    stenF = CalculateSten(actualScore, categoryDef.StenNormsFemale);
+                    stenM = CalculateSten(actualScore, categoryDef.StenNormsMale);
+                    descF = GetStenDescription(stenF);
+                    descM = GetStenDescription(stenM);
+
+                    // Kolor z bazy (jeśli istnieje), w przeciwnym razie fallback
+                    if (!string.IsNullOrEmpty(categoryDef.Color))
+                    {
+                        color = categoryDef.Color;
+                    }
+                    else
+                    {
+                        // Fallback do stałych (jeśli pole Color w bazie byłoby puste)
+                        color = (code?.ToUpper()) switch
+                        {
+                            "ACHIEVEMENT" => AppConstants.Colors.Achievement,
+                            "AFFILIATION" => AppConstants.Colors.Affiliation,
+                            "AUTONOMY" => AppConstants.Colors.Autonomy,
+                            "DOMINANCE" => AppConstants.Colors.Dominance,
+                            _ => "#6c757d"
+                        };
+                    }
+                }
+
+                finalResult.Categories.Add(new CategoryResultVm
+                {
+                    CategoryName = displayName,
+                    CategoryCode = code,
+                    Color = color,
+                    ScoreObtained = actualScore,
+                    ScoreMax = maxScore,
+                    StenFemale = stenF,
+                    DescFemale = descF,
+                    StenMale = stenM,
+                    DescMale = descM
+                });
             }
 
-            ViewBag.FormTitle = questionnaire.Title;
+            return View("Result", finalResult);
+        }
 
-            var ach = scores[AppConstants.Texts.Labels.AchievementShort];
-            var aff = scores[AppConstants.Texts.Labels.AffiliationShort];
-            var aut = scores[AppConstants.Texts.Labels.AutonomyShort];
-            var dom = scores[AppConstants.Texts.Labels.DominanceShort];
+        private int CalculateSten(int score, string normsString)
+        {
+            if (string.IsNullOrEmpty(normsString)) return 1;
+            try
+            {
+                var thresholds = normsString.Split(',').Select(int.Parse).ToArray();
+                for (int i = 0; i < thresholds.Length; i++)
+                {
+                    if (score <= thresholds[i]) return i + 1;
+                }
+                return 10;
+            }
+            catch { return 0; }
+        }
 
-            // Obliczanie STEN
-            int achStenF = StenHelper.GetSten(StenCategory.Achievement, ach.actual, false);
-            int achStenM = StenHelper.GetSten(StenCategory.Achievement, ach.actual, true);
-
-            int affStenF = StenHelper.GetSten(StenCategory.Affiliation, aff.actual, false);
-            int affStenM = StenHelper.GetSten(StenCategory.Affiliation, aff.actual, true);
-
-            int autStenF = StenHelper.GetSten(StenCategory.Autonomy, aut.actual, false);
-            int autStenM = StenHelper.GetSten(StenCategory.Autonomy, aut.actual, true);
-
-            int domStenF = StenHelper.GetSten(StenCategory.Dominance, dom.actual, false);
-            int domStenM = StenHelper.GetSten(StenCategory.Dominance, dom.actual, true);
-
-            ViewBag.AchVal = ach.actual; ViewBag.AchMax = ach.max; ViewBag.AchStenF = achStenF; ViewBag.AchStenM = achStenM;
-            ViewBag.AffVal = aff.actual; ViewBag.AffMax = aff.max; ViewBag.AffStenF = affStenF; ViewBag.AffStenM = affStenM;
-            ViewBag.AutVal = aut.actual; ViewBag.AutMax = aut.max; ViewBag.AutStenF = autStenF; ViewBag.AutStenM = autStenM;
-            ViewBag.DomVal = dom.actual; ViewBag.DomMax = dom.max; ViewBag.DomStenF = domStenF; ViewBag.DomStenM = domStenM;
-
-            return View(AppConstants.Texts.Messages.Result);
+        private string GetStenDescription(int sten)
+        {
+            if (sten >= 1 && sten <= 4) return "Niski";
+            if (sten >= 5 && sten <= 6) return "Przeciętny";
+            if (sten >= 7 && sten <= 10) return "Wysoki";
+            return "-";
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendResult(
-            string email,
-            int achVal, int achMax, int achStenF, int achStenM,
-            int affVal, int affMax, int affStenF, int affStenM,
-            int autVal, int autMax, int autStenF, int autStenM,
-            int domVal, int domMax, int domStenF, int domStenM,
-            string formTitle)
+        public async Task<IActionResult> SendResult(FinalResultVm model, string email)
         {
-            if (string.IsNullOrEmpty(email)) return RedirectToAction(AppConstants.Texts.Messages.Index, AppConstants.Texts.Messages.Home);
+            if (string.IsNullOrEmpty(email)) return RedirectToAction("Index", "Home");
 
             var existingSub = await _context.Subs.FirstOrDefaultAsync(s => s.Email == email);
             if (existingSub == null)
             {
                 _context.Subs.Add(new Sub { Email = email, IsActive = true, Newsletter = true, AddedAt = DateTime.Now });
+                await _context.SaveChangesAsync();
             }
             else
             {
-                existingSub.IsActive = true;
-                existingSub.Newsletter = true;
+                if (!existingSub.IsActive) { existingSub.IsActive = true; await _context.SaveChangesAsync(); }
             }
-            await _context.SaveChangesAsync();
+
+            string rows = "";
+            foreach (var cat in model.Categories)
+            {
+                rows += GenerateEmailRow(cat);
+            }
+
+            string emailBody = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                    <h2 style='color: {AppConstants.Colors.Primary}; text-align: center;'>Wyniki: {model.FormTitle}</h2>
+                    <p style='text-align: center;'>{AppConstants.Texts.Messages.EmailThanks}</p>
+                    <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
+                    {rows}
+                    <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
+                    <p style='text-align: center; font-size: 12px; color: #888;'>{AppConstants.Texts.Messages.GeneratedBy}</p>
+                </div>";
 
             try
             {
-                string emailBody = $@"
-                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
-                        <h2 style='color: {AppConstants.Colors.Primary}; text-align: center;'>{AppConstants.Texts.Messages.YourResults} {formTitle}</h2>
-                        <p>{AppConstants.Texts.Messages.EmailThanks}</p>
-                         
-                        <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-
-                        {GenerateResultBlock(AppConstants.Texts.Labels.Achievement, achVal, achMax, achStenF, achStenM, AppConstants.Colors.Achievement)}
-                        {GenerateResultBlock(AppConstants.Texts.Labels.Affiliation, affVal, affMax, affStenF, affStenM, AppConstants.Colors.Affiliation)}
-                        {GenerateResultBlock(AppConstants.Texts.Labels.Autonomy, autVal, autMax, autStenF, autStenM, AppConstants.Colors.Autonomy)}
-                        {GenerateResultBlock(AppConstants.Texts.Labels.Dominance, domVal, domMax, domStenF, domStenM, AppConstants.Colors.Dominance)}
-
-                        <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-                        <p style='text-align: center; font-size: 12px; color: #888;'>{AppConstants.Texts.Messages.GeneratedBy}</p>
-                    </div>";
-
-                await _emailService.SendEmailAsync(email, $"{AppConstants.Texts.Messages.YourResults} {formTitle}", emailBody);
+                await _emailService.SendEmailAsync(email, $"{AppConstants.Texts.Messages.YourResults} {model.FormTitle}", emailBody);
                 TempData[AppConstants.Texts.Messages.SuccessMessage] = AppConstants.Texts.Messages.EmailSentSuccess;
             }
             catch
@@ -145,34 +218,23 @@ namespace INeed.Controllers
                 TempData[AppConstants.Texts.Messages.ErrorMessage] = AppConstants.Texts.Messages.EmailSentError;
             }
 
-            ViewBag.FormTitle = formTitle;
-
-            ViewBag.AchVal = achVal; ViewBag.AchMax = achMax; ViewBag.AchStenF = achStenF; ViewBag.AchStenM = achStenM;
-            ViewBag.AffVal = affVal; ViewBag.AffMax = affMax; ViewBag.AffStenF = affStenF; ViewBag.AffStenM = affStenM;
-            ViewBag.AutVal = autVal; ViewBag.AutMax = autMax; ViewBag.AutStenF = autStenF; ViewBag.AutStenM = autStenM;
-            ViewBag.DomVal = domVal; ViewBag.DomMax = domMax; ViewBag.DomStenF = domStenF; ViewBag.DomStenM = domStenM;
-
-            return View(AppConstants.Texts.Messages.Result);
+            return View("Result", model);
         }
 
-        private string GenerateResultBlock(string label, int actual, int max, int stenF, int stenM, string color)
+        private string GenerateEmailRow(CategoryResultVm cat)
         {
-            double percent = max > 0 ? (double)actual / max * 100 : 0;
-            string descF = StenHelper.GetDescription(stenF);
-            string descM = StenHelper.GetDescription(stenM);
-
             return $@"
                 <div style='margin-bottom: 25px;'>
                     <div style='display: flex; justify-content: space-between; align-items: baseline;'>
-                        <strong style='font-size: 1.1em;'>{label}</strong>
-                        <span style='font-weight: bold;'>{actual}/{max}</span>
+                        <strong style='font-size: 1.1em;'>{cat.CategoryName}</strong>
+                        <span style='font-weight: bold;'>{cat.ScoreObtained}/{cat.ScoreMax}</span>
                     </div>
                     <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin: 5px 0 10px 0;'>
-                        <div style='width: {percent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}%; background-color: {color}; height: 100%; border-radius: 5px;'></div>
+                        <div style='width: {cat.Percent.ToString("0")}%; background-color: {cat.Color}; height: 100%; border-radius: 5px;'></div>
                     </div>
                     <div style='font-size: 0.9em; color: #555; background-color: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #eee;'>
-                        <div style='margin-bottom: 4px;'><strong>Kobieta:</strong> STEN {stenF} ({descF})</div>
-                        <div><strong>Mężczyzna:</strong> STEN {stenM} ({descM})</div>
+                        <div><strong>Kobieta:</strong> STEN {cat.StenFemale} ({cat.DescFemale})</div>
+                        <div><strong>Mężczyzna:</strong> STEN {cat.StenMale} ({cat.DescMale})</div>
                     </div>
                 </div>";
         }

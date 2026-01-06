@@ -4,6 +4,7 @@ using INeed.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace INeed.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260106191140_SeedCategories")]
+    partial class SeedCategories
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -64,11 +67,6 @@ namespace INeed.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -84,6 +82,40 @@ namespace INeed.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
+                            Code = "ACHIEVEMENT",
+                            Name = "Potrzeba Osiągnięć",
+                            StenNormsFemale = "14,15,17,18,19,21,22,23,24,25",
+                            StenNormsMale = "12,15,17,18,19,21,22,23,24,25"
+                        },
+                        new
+                        {
+                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
+                            Code = "AFFILIATION",
+                            Name = "Potrzeba Afiliacji",
+                            StenNormsFemale = "6,8,10,11,12,13,14,16,17,20",
+                            StenNormsMale = "6,8,9,10,11,13,14,15,18,20"
+                        },
+                        new
+                        {
+                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
+                            Code = "AUTONOMY",
+                            Name = "Potrzeba Autonomii",
+                            StenNormsFemale = "14,15,17,18,19,21,22,23,24,25",
+                            StenNormsMale = "13,16,17,18,20,21,22,23,24,25"
+                        },
+                        new
+                        {
+                            Id = new Guid("44444444-4444-4444-4444-444444444444"),
+                            Code = "DOMINANCE",
+                            Name = "Potrzeba Dominacji",
+                            StenNormsFemale = "7,9,11,13,14,16,18,21,22,25",
+                            StenNormsMale = "8,11,12,14,16,17,19,21,23,25"
+                        });
                 });
 
             modelBuilder.Entity("INeed.Models.Form", b =>
