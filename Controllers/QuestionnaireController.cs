@@ -41,7 +41,6 @@ namespace INeed.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Fill(Guid id, IFormCollection collection)
         {
-            // 1. Pobieramy formularz
             var questionnaire = await _context.Forms
                 .Include(f => f.Questions)
                 .ThenInclude(q => q.Answers)
@@ -49,112 +48,61 @@ namespace INeed.Controllers
 
             if (questionnaire == null) return NotFound();
 
-            // 2. DYNAMICZNE POBRANIE KATEGORII Z BAZY
-            // AsNoTracking przyspiesza odczyt, bo nie będziemy modyfikować tych danych
+            // 1. Pobieramy wszystkie definicje kategorii (normy i kolory) z bazy
             var dbCategories = await _context.Categories.AsNoTracking().ToListAsync();
-
             var finalResult = new FinalResultVm { FormTitle = questionnaire.Title };
 
-            // 3. Grupowanie pytań po nazwie kategorii z modelu Question
+            // 2. Grupowanie dynamiczne pytań po nazwie kategorii przypisanej w tabeli Questions
             var questionsByCatName = questionnaire.Questions
-                .GroupBy(q => q.Category?.Trim() ?? "Pozostałe");
+                .GroupBy(q => q.Category?.Trim() ?? AppConstants.Texts.Layout.Another);
 
             foreach (var group in questionsByCatName)
             {
-                string catName = group.Key; // np. "Ach", "Potrzeba Osiągnięć"
+                string catName = group.Key;
 
-                // 4. INTELIGENTNE DOPASOWANIE (Pytanie <-> Baza)
+                // Szukamy definicji w bazie danych pasującej do nazwy z pytania
                 var categoryDef = dbCategories.FirstOrDefault(c =>
-                    c.Name.Trim().Equals(catName, StringComparison.OrdinalIgnoreCase) ||
-                    c.Name.Contains(catName, StringComparison.OrdinalIgnoreCase) ||
-                    catName.Contains(c.Name, StringComparison.OrdinalIgnoreCase));
-
-                // Fallback: Rozpoznawanie po kodach/skrótach jeśli nazwy się różnią
-                if (categoryDef == null)
-                {
-                    string uName = catName.ToUpper();
-                    if (uName.Contains("ACH") || uName.Contains("OSIĄG"))
-                        categoryDef = dbCategories.FirstOrDefault(c => c.Code == "ACHIEVEMENT");
-                    else if (uName.Contains("AFF") || uName.Contains("AFIL"))
-                        categoryDef = dbCategories.FirstOrDefault(c => c.Code == "AFFILIATION");
-                    else if (uName.Contains("AUT"))
-                        categoryDef = dbCategories.FirstOrDefault(c => c.Code == "AUTONOMY");
-                    else if (uName.Contains("DOM"))
-                        categoryDef = dbCategories.FirstOrDefault(c => c.Code == "DOMINANCE");
-                }
+                    c.Name.Trim().Equals(catName, StringComparison.OrdinalIgnoreCase));
 
                 int actualScore = 0;
                 int maxScore = 0;
 
                 foreach (var q in group)
                 {
-                    int maxQ = q.Answers.Any() ? q.Answers.Max(a => a.Score) : 0;
-                    maxScore += maxQ;
-
+                    maxScore += q.Answers.Any() ? q.Answers.Max(a => a.Score) : 0;
                     if (collection.TryGetValue($"Question_{q.QuestionId}", out var val) && Guid.TryParse(val, out Guid aId))
                     {
                         actualScore += q.Answers.FirstOrDefault(a => a.AnswerId == aId)?.Score ?? 0;
                     }
                 }
 
-                // Wartości domyślne
-                int stenF = 0, stenM = 0;
-                string descF = "-", descM = "-";
-                string color = "#6c757d"; // Szary
-                string code = "UNKNOWN";
-                string displayName = catName;
-
-                // 5. OBLICZANIE NA PODSTAWIE DANYCH Z BAZY
-                if (categoryDef != null)
-                {
-                    displayName = categoryDef.Name; // Używamy poprawnej nazwy z bazy
-                    code = categoryDef.Code;
-
-                    // STENy z bazy
-                    stenF = CalculateSten(actualScore, categoryDef.StenNormsFemale);
-                    stenM = CalculateSten(actualScore, categoryDef.StenNormsMale);
-                    descF = GetStenDescription(stenF);
-                    descM = GetStenDescription(stenM);
-
-                    // Kolor z bazy (jeśli istnieje), w przeciwnym razie fallback
-                    if (!string.IsNullOrEmpty(categoryDef.Color))
-                    {
-                        color = categoryDef.Color;
-                    }
-                    else
-                    {
-                        // Fallback do stałych (jeśli pole Color w bazie byłoby puste)
-                        color = (code?.ToUpper()) switch
-                        {
-                            "ACHIEVEMENT" => AppConstants.Colors.Achievement,
-                            "AFFILIATION" => AppConstants.Colors.Affiliation,
-                            "AUTONOMY" => AppConstants.Colors.Autonomy,
-                            "DOMINANCE" => AppConstants.Colors.Dominance,
-                            _ => "#6c757d"
-                        };
-                    }
-                }
+                // Obliczamy STENy tylko jeśli kategoria istnieje w tabeli Categories
+                int stenF = categoryDef != null ? CalculateSten(actualScore, categoryDef.StenNormsFemale) : 0;
+                int stenM = categoryDef != null ? CalculateSten(actualScore, categoryDef.StenNormsMale) : 0;
 
                 finalResult.Categories.Add(new CategoryResultVm
                 {
-                    CategoryName = displayName,
-                    CategoryCode = code,
-                    Color = color,
+                    CategoryName = catName,
+                    CategoryCode = categoryDef?.Code ?? "CUSTOM",
+                    Color = categoryDef?.Color ?? AppConstants.Colors.TextSecondary,
                     ScoreObtained = actualScore,
                     ScoreMax = maxScore,
                     StenFemale = stenF,
-                    DescFemale = descF,
+                    DescFemale = GetStenDescription(stenF),
                     StenMale = stenM,
-                    DescMale = descM
+                    DescMale = GetStenDescription(stenM)
                 });
             }
+
+            // Opcjonalnie: Sortowanie kategorii alfabetycznie, aby wynik był przewidywalny
+            finalResult.Categories = finalResult.Categories.OrderBy(c => c.CategoryName).ToList();
 
             return View("Result", finalResult);
         }
 
         private int CalculateSten(int score, string normsString)
         {
-            if (string.IsNullOrEmpty(normsString)) return 1;
+            if (string.IsNullOrEmpty(normsString)) return 0;
             try
             {
                 var thresholds = normsString.Split(',').Select(int.Parse).ToArray();
@@ -169,6 +117,7 @@ namespace INeed.Controllers
 
         private string GetStenDescription(int sten)
         {
+            if (sten == 0) return "-";
             if (sten >= 1 && sten <= 4) return "Niski";
             if (sten >= 5 && sten <= 6) return "Przeciętny";
             if (sten >= 7 && sten <= 10) return "Wysoki";
@@ -187,9 +136,10 @@ namespace INeed.Controllers
                 _context.Subs.Add(new Sub { Email = email, IsActive = true, Newsletter = true, AddedAt = DateTime.Now });
                 await _context.SaveChangesAsync();
             }
-            else
+            else if (!existingSub.IsActive)
             {
-                if (!existingSub.IsActive) { existingSub.IsActive = true; await _context.SaveChangesAsync(); }
+                existingSub.IsActive = true;
+                await _context.SaveChangesAsync();
             }
 
             string rows = "";
@@ -200,7 +150,7 @@ namespace INeed.Controllers
 
             string emailBody = $@"
                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
-                    <h2 style='color: {AppConstants.Colors.Primary}; text-align: center;'>Wyniki: {model.FormTitle}</h2>
+                    <h2 style='color: {AppConstants.Colors.Primary}; text-align: center;'>{AppConstants.Texts.Messages.Wyniki}: {model.FormTitle}</h2>
                     <p style='text-align: center;'>{AppConstants.Texts.Messages.EmailThanks}</p>
                     <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
                     {rows}
@@ -230,7 +180,7 @@ namespace INeed.Controllers
                         <span style='font-weight: bold;'>{cat.ScoreObtained}/{cat.ScoreMax}</span>
                     </div>
                     <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin: 5px 0 10px 0;'>
-                        <div style='width: {cat.Percent.ToString("0")}%; background-color: {cat.Color}; height: 100%; border-radius: 5px;'></div>
+                        <div style='width: {cat.Percent.ToString("0", System.Globalization.CultureInfo.InvariantCulture)}%; background-color: {cat.Color}; height: 100%; border-radius: 5px;'></div>
                     </div>
                     <div style='font-size: 0.9em; color: #555; background-color: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #eee;'>
                         <div><strong>Kobieta:</strong> STEN {cat.StenFemale} ({cat.DescFemale})</div>
