@@ -24,7 +24,8 @@ namespace INeed.Controllers
             _emailService = emailService;
         }
 
-        [HttpGet(AppConstants.Texts.FillRoute + "/{id}")]
+        // POPRAWKA: Używamy stałej technicznej, a NIE TextResources
+        [HttpGet(AppConstants.FillRoute + "/{id}")]
         public async Task<IActionResult> Fill(Guid id)
         {
             var form = await _context.Forms
@@ -35,7 +36,8 @@ namespace INeed.Controllers
             return View(form);
         }
 
-        [HttpPost(AppConstants.Texts.FillRoute + "/{id}")]
+        // POPRAWKA: Używamy stałej technicznej
+        [HttpPost(AppConstants.FillRoute + "/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Fill(Guid id, IFormCollection collection)
         {
@@ -48,7 +50,6 @@ namespace INeed.Controllers
             var dbCategories = await _context.Categories.AsNoTracking().ToListAsync();
             var finalResult = new FinalResultVm { FormTitle = questionnaire.Title };
 
-            // Sprawdzenie języka
             bool isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
 
             var groupedQuestions = questionnaire.Questions
@@ -76,7 +77,6 @@ namespace INeed.Controllers
                 int stenF = categoryDef != null ? CalculateSten(actualScore, categoryDef.StenNormsFemale) : 0;
                 int stenM = categoryDef != null ? CalculateSten(actualScore, categoryDef.StenNormsMale) : 0;
 
-                // Wybór nazwy kategorii zależnie od języka
                 string displayName = (isEn && categoryDef != null && !string.IsNullOrEmpty(categoryDef.NameEN))
                                      ? categoryDef.NameEN
                                      : (categoryDef?.Name ?? catName);
@@ -156,11 +156,13 @@ namespace INeed.Controllers
             try
             {
                 await _emailService.SendEmailAsync(email, $"{AppConstants.Texts.Messages.YourResults} {model.FormTitle}", emailBody);
-                TempData[AppConstants.Texts.Messages.SuccessMessage] = AppConstants.Texts.Messages.EmailSentSuccess;
+
+                // POPRAWKA: Używamy Keys dla klucza, Texts dla wartości
+                TempData[AppConstants.Keys.SuccessMessage] = AppConstants.Texts.Messages.EmailSentSuccess;
             }
             catch
             {
-                TempData[AppConstants.Texts.Messages.ErrorMessage] = AppConstants.Texts.Messages.EmailSentError;
+                TempData[AppConstants.Keys.ErrorMessage] = AppConstants.Texts.Messages.EmailSentError;
             }
 
             return View("Result", model);
@@ -168,6 +170,10 @@ namespace INeed.Controllers
 
         private string GenerateEmailRow(CategoryResultVm cat)
         {
+            bool isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
+            string labelWoman = isEn ? "Woman" : "Kobieta";
+            string labelMan = isEn ? "Man" : "Mężczyzna";
+
             return $@"
                 <div style='margin-bottom: 25px;'>
                     <div style='display: flex; justify-content: space-between; align-items: baseline;'>
@@ -178,8 +184,8 @@ namespace INeed.Controllers
                         <div style='width: {cat.Percent.ToString("0", System.Globalization.CultureInfo.InvariantCulture)}%; background-color: {cat.Color}; height: 100%; border-radius: 5px;'></div>
                     </div>
                     <div style='font-size: 0.9em; color: #555; background-color: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #eee;'>
-                        <div><strong>Kobieta:</strong> STEN {cat.StenFemale} ({cat.DescFemale})</div>
-                        <div><strong>Mężczyzna:</strong> STEN {cat.StenMale} ({cat.DescMale})</div>
+                        <div><strong>{labelWoman}:</strong> STEN {cat.StenFemale} ({cat.DescFemale})</div>
+                        <div><strong>{labelMan}:</strong> STEN {cat.StenMale} ({cat.DescMale})</div>
                     </div>
                 </div>";
         }

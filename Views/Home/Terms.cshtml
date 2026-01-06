@@ -1,21 +1,24 @@
 ﻿@using INeed.Helpers
 
 @{
-    ViewData[AppConstants.Texts.Messages.Title] = "Warunki korzystania z usługi";
+    // POPRAWKA: Używamy Keys.Title (klucz) oraz Texts.Layout.Terms (wartość przetłumaczona)
+    ViewData[AppConstants.Keys.Title] = AppConstants.Texts.Layout.Terms;
 }
 
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="text-center mb-5">
-                <h1 class="fw-bold display-5">Warunki korzystania z usługi</h1>
-                <p class="text-muted lead">Regulamin serwisu INeed</p>
+                <h1 class="fw-bold display-5">@AppConstants.Texts.Layout.Terms</h1>
+                <p class="text-muted lead">@AppConstants.Texts.CompanyName</p>
             </div>
 
             <div class="card shadow-sm border-0" style="border-radius: 15px;">
                 <div class="card-body p-5">
 
-                    <h4 class="fw-bold mb-3">1. Postanowienia ogólne</h4>
+                    @Html.Raw(AppConstants.Texts.PolicyContent.Terms)
+
+                    @* <h4 class="fw-bold mb-3">1. Postanowienia ogólne</h4>
                     <p>
                         Niniejszy regulamin określa zasady korzystania z serwisu INeed, w tym wypełniania kwestionariuszy motywacyjnych oraz otrzymywania wyników drogą elektroniczną.
                     </p>
@@ -39,14 +42,17 @@
 
                     <h4 class="fw-bold mb-3">4. Prawa autorskie</h4>
                     <p>
-                        Wszelkie treści, grafiki oraz mechanizmy działania serwisu są własnością INeed i są chronione prawem autorskim. Kopiowanie bez zgody jest zabronione.
-                    </p>
+                        Wszelkie treści, grafiki oraz mechanizmy działania serwisu są własnością INeed i są chronione prawem autorskim.
+                        Kopiowanie bez zgody jest zabronione.
+                    </p> 
+                    *@
                 </div>
             </div>
 
             <div class="text-center mt-5">
                 <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark px-4 py-2" style="border-radius: 10px;">
-                    &larr; Wróć do strony głównej
+                    &larr;
+                    @AppConstants.Texts.Buttons.BackToHome
                 </a>
             </div>
         </div>

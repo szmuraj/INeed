@@ -2,7 +2,8 @@
 @using System.Globalization
 @model INeed.Models.Form
 @{
-    ViewData[AppConstants.Texts.Messages.Title] = Model.Title;
+    // POPRAWKA: Używamy Keys.Title zamiast Texts.Messages.Title
+    ViewData[AppConstants.Keys.Title] = Model.Title;
     var isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
 }
 
@@ -35,7 +36,6 @@
                                     </h5>
 
                                     <div class="d-flex flex-row flex-nowrap gap-2 justify-content-between answers-wrapper overflow-auto pb-2">
-                                        @* ZMIANA: Sortowanie po Order zamiast po Score *@
                                         @foreach (var answer in question.Answers.OrderBy(a => a.Order))
                                         {
                                             <div class="flex-grow-1">

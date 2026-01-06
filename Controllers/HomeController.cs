@@ -1,5 +1,3 @@
-// Ignore Spelling: rodo
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using INeed.Data;
@@ -51,32 +49,33 @@ namespace INeed.Controllers
         {
             if (!rodoConsent)
             {
-                // U¿ywamy nowego klucza ContactError, aby nie mieszaæ z innymi formularzami
-                TempData[AppConstants.Texts.Messages.ContactError] = AppConstants.Texts.Messages.RodoRequired;
-                return RedirectToAction(AppConstants.Texts.Messages.Contact);
+                // POPRAWKA: U¿ywamy Keys dla klucza TempData
+                TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.RodoRequired;
+                // POPRAWKA: U¿ywamy Routing dla nazwy akcji
+                return RedirectToAction(AppConstants.Routing.ActionContact);
             }
 
             if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(message))
             {
                 try
                 {
-                    // Wysy³amy wiadomoœæ na adres zdefiniowany w sta³ych
+                    // POPRAWKA: U¿ywamy tekstu z AppConstants.Texts.Contact
                     await _emailService.SendEmailAsync(AppConstants.Texts.Contact.Email, $"{AppConstants.Texts.Messages.NewMessage} {email}", message);
 
-                    // Sukces - u¿ywamy sta³ej z "Dziêkujemy!"
-                    TempData[AppConstants.Texts.Messages.ContactSuccess] = AppConstants.Texts.Messages.EmailSentSuccess;
+                    // POPRAWKA: U¿ywamy Keys dla klucza
+                    TempData[AppConstants.Keys.ContactSuccess] = AppConstants.Texts.Messages.ContactSuccess;
                 }
                 catch
                 {
-                    TempData[AppConstants.Texts.Messages.ContactError] = AppConstants.Texts.Messages.EmailSentError;
+                    TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.ContactError;
                 }
             }
             else
             {
-                TempData[AppConstants.Texts.Messages.ContactError] = AppConstants.Texts.Messages.FormIncomplete;
+                TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.FormIncomplete;
             }
 
-            return RedirectToAction(AppConstants.Texts.Messages.Contact);
+            return RedirectToAction(AppConstants.Routing.ActionContact);
         }
 
         [HttpPost]
@@ -85,7 +84,7 @@ namespace INeed.Controllers
         {
             if (string.IsNullOrEmpty(email) || _context.Subs == null)
             {
-                return RedirectToAction(AppConstants.Texts.Messages.Contact);
+                return RedirectToAction(AppConstants.Routing.ActionContact);
             }
 
             var sub = await _context.Subs.FirstOrDefaultAsync(s => s.Email == email);
@@ -96,14 +95,16 @@ namespace INeed.Controllers
                 sub.Newsletter = false;
                 _context.Subs.Update(sub);
                 await _context.SaveChangesAsync();
-                TempData[AppConstants.Texts.Messages.ContactSuccess] = AppConstants.Texts.Messages.UnsubscribeSuccess;
+
+                // POPRAWKA: U¿ywamy Keys dla klucza
+                TempData[AppConstants.Keys.ContactSuccess] = AppConstants.Texts.Messages.UnsubscribeSuccess;
             }
             else
             {
-                TempData[AppConstants.Texts.Messages.ContactError] = AppConstants.Texts.Messages.EmailNotFound;
+                TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.EmailNotFound;
             }
 
-            return RedirectToAction(AppConstants.Texts.Messages.Contact);
+            return RedirectToAction(AppConstants.Routing.ActionContact);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
