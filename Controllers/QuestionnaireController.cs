@@ -24,7 +24,6 @@ namespace INeed.Controllers
             _emailService = emailService;
         }
 
-        // POPRAWKA: Używamy stałej technicznej, a NIE TextResources
         [HttpGet(AppConstants.FillRoute + "/{id}")]
         public async Task<IActionResult> Fill(Guid id)
         {
@@ -36,7 +35,6 @@ namespace INeed.Controllers
             return View(form);
         }
 
-        // POPRAWKA: Używamy stałej technicznej
         [HttpPost(AppConstants.FillRoute + "/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Fill(Guid id, IFormCollection collection)
@@ -47,10 +45,17 @@ namespace INeed.Controllers
 
             if (questionnaire == null) return NotFound();
 
-            var dbCategories = await _context.Categories.AsNoTracking().ToListAsync();
-            var finalResult = new FinalResultVm { FormTitle = questionnaire.Title };
-
             bool isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
+
+            // --- POPRAWKA: Wybór tytułu zależnie od języka ---
+            string formTitle = (isEn && !string.IsNullOrEmpty(questionnaire.TitleEN))
+                ? questionnaire.TitleEN
+                : questionnaire.Title;
+
+            var finalResult = new FinalResultVm { FormTitle = formTitle };
+            // ------------------------------------------------
+
+            var dbCategories = await _context.Categories.AsNoTracking().ToListAsync();
 
             var groupedQuestions = questionnaire.Questions
                 .GroupBy(q => q.Category?.Trim() ?? "General");
@@ -156,8 +161,6 @@ namespace INeed.Controllers
             try
             {
                 await _emailService.SendEmailAsync(email, $"{AppConstants.Texts.Messages.YourResults} {model.FormTitle}", emailBody);
-
-                // POPRAWKA: Używamy Keys dla klucza, Texts dla wartości
                 TempData[AppConstants.Keys.SuccessMessage] = AppConstants.Texts.Messages.EmailSentSuccess;
             }
             catch
