@@ -24,43 +24,65 @@ namespace INeed.Controllers
             _emailService = emailService;
         }
 
-        // POPRAWKA: Używamy stałej technicznej, a NIE TextResources
         [HttpGet(AppConstants.FillRoute + "/{id}")]
-        public async Task<IActionResult> Fill(Guid id)
+        public async Task<IActionResult> Fill(Guid id, string visitorId = "000000")
         {
+            if (id == Guid.Empty) return NotFound();
+
             var form = await _context.Forms
                 .Include(f => f.Questions).ThenInclude(q => q.Answers)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (form == null || !form.IsActive) return NotFound();
+
+            ViewBag.VisitorId = visitorId;
             return View(form);
         }
 
-        // POPRAWKA: Używamy stałej technicznej
         [HttpPost(AppConstants.FillRoute + "/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Fill(Guid id, IFormCollection collection)
+        public async Task<IActionResult> Fill(Guid id, string visitorId, string gender, IFormCollection collection)
         {
+            if (string.IsNullOrEmpty(visitorId)) visitorId = "000000";
+            // Domyślnie "N" (Nie podano) jeśli brak wyboru
+            if (string.IsNullOrEmpty(gender)) gender = "N";
+
             var questionnaire = await _context.Forms
                 .Include(f => f.Questions).ThenInclude(q => q.Answers)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (questionnaire == null) return NotFound();
 
-            var dbCategories = await _context.Categories.AsNoTracking().ToListAsync();
-            var finalResult = new FinalResultVm { FormTitle = questionnaire.Title };
-
             bool isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
+            string formTitle = (isEn && !string.IsNullOrEmpty(questionnaire.TitleEN)) ? questionnaire.TitleEN : questionnaire.Title;
 
-            var groupedQuestions = questionnaire.Questions
-                .GroupBy(q => q.Category?.Trim() ?? "General");
+            var finalResult = new FinalResultVm
+            {
+                FormTitle = formTitle,
+                VisitorId = visitorId,
+                Gender = gender
+            };
+
+            var dbCategories = await _context.Categories.AsNoTracking().ToListAsync();
+
+            var resultDb = new VisitorResult
+            {
+                Id = Guid.NewGuid(),
+                VisitorId = visitorId,
+                FormId = questionnaire.Id,
+                Gender = gender,
+                Date = DateTime.UtcNow
+            };
+
+            var groupedQuestions = questionnaire.Questions.GroupBy(q => q.Category?.Trim() ?? "General");
 
             foreach (var group in groupedQuestions)
             {
-                string catName = group.Key;
                 var categoryDef = dbCategories.FirstOrDefault(c =>
-                    c.Name.Trim().Equals(catName, StringComparison.OrdinalIgnoreCase) ||
-                    (c.NameEN != null && c.NameEN.Trim().Equals(catName, StringComparison.OrdinalIgnoreCase)));
+                    c.Name.Trim().Equals(group.Key, StringComparison.OrdinalIgnoreCase) ||
+                    (c.NameEN != null && c.NameEN.Trim().Equals(group.Key, StringComparison.OrdinalIgnoreCase)));
+
+                if (categoryDef == null) continue;
 
                 int actualScore = 0;
                 int maxScore = 0;
@@ -74,25 +96,66 @@ namespace INeed.Controllers
                     }
                 }
 
-                int stenF = categoryDef != null ? CalculateSten(actualScore, categoryDef.StenNormsFemale) : 0;
-                int stenM = categoryDef != null ? CalculateSten(actualScore, categoryDef.StenNormsMale) : 0;
+                // ZAWSZE obliczamy sten dla obu płci, aby mieć dane do porównania
+                int stenF = CalculateSten(actualScore, categoryDef.StenNormsFemale);
+                int stenM = CalculateSten(actualScore, categoryDef.StenNormsMale);
 
-                string displayName = (isEn && categoryDef != null && !string.IsNullOrEmpty(categoryDef.NameEN))
-                                     ? categoryDef.NameEN
-                                     : (categoryDef?.Name ?? catName);
+                string adviceF = GetAdvice(stenF, categoryDef, isEn);
+                string adviceM = GetAdvice(stenM, categoryDef, isEn);
+
+                // Ustalanie "oficjalnego" wyniku użytkownika
+                int userSten = 0;
+                string userAdvice = "";
+
+                if (gender == "F")
+                {
+                    userSten = stenF;
+                    userAdvice = adviceF;
+                }
+                else if (gender == "M")
+                {
+                    userSten = stenM;
+                    userAdvice = adviceM;
+                }
+                else // "N"
+                {
+                    userSten = 0; // Brak przypisanego stenu, bo nie znamy płci
+                    userAdvice = "";
+                }
+
+                string displayName = (isEn && !string.IsNullOrEmpty(categoryDef.NameEN)) ? categoryDef.NameEN : categoryDef.Name;
 
                 finalResult.Categories.Add(new CategoryResultVm
                 {
                     CategoryName = displayName,
-                    Color = categoryDef?.Color ?? "#6c757d",
+                    Color = categoryDef.Color ?? "#6c757d",
                     ScoreObtained = actualScore,
                     ScoreMax = maxScore,
+
+                    StenUser = userSten,
                     StenFemale = stenF,
                     StenMale = stenM,
+
+                    Advice = userAdvice,
+                    AdviceFemale = adviceF,
+                    AdviceMale = adviceM,
+
                     DescFemale = GetStenDescription(stenF),
                     DescMale = GetStenDescription(stenM)
                 });
+
+                resultDb.CategoryScores.Add(new VisitorCategoryScore
+                {
+                    Id = Guid.NewGuid(),
+                    CategoryId = categoryDef.Id,
+                    Score = actualScore,
+                    MaxScore = maxScore,
+                    Sten = userSten
+                });
             }
+
+            _context.VisitorResults.Add(resultDb);
+            await _context.SaveChangesAsync();
 
             return View("Result", finalResult);
         }
@@ -103,19 +166,26 @@ namespace INeed.Controllers
             try
             {
                 var thresholds = normsString.Split(',').Select(int.Parse).ToArray();
-                for (int i = 0; i < thresholds.Length; i++)
-                    if (score <= thresholds[i]) return i + 1;
+                for (int i = 0; i < thresholds.Length; i++) if (score <= thresholds[i]) return i + 1;
                 return 10;
             }
             catch { return 0; }
+        }
+
+        private string GetAdvice(int sten, Category cat, bool isEn)
+        {
+            if (cat == null) return string.Empty;
+            if (sten <= 4) return isEn ? (cat.AdviceLowEN ?? "") : (cat.AdviceLow ?? "");
+            if (sten <= 6) return isEn ? (cat.AdviceAvgEN ?? "") : (cat.AdviceAvg ?? "");
+            return isEn ? (cat.AdviceHighEN ?? "") : (cat.AdviceHigh ?? "");
         }
 
         private string GetStenDescription(int sten)
         {
             if (sten == 0) return "-";
             bool isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
-            if (sten >= 1 && sten <= 4) return isEn ? "Low" : "Niski";
-            if (sten >= 5 && sten <= 6) return isEn ? "Average" : "Przeciętny";
+            if (sten <= 4) return isEn ? "Low" : "Niski";
+            if (sten <= 6) return isEn ? "Average" : "Przeciętny";
             return isEn ? "High" : "Wysoki";
         }
 
@@ -140,24 +210,24 @@ namespace INeed.Controllers
             string rows = "";
             foreach (var cat in model.Categories)
             {
-                rows += GenerateEmailRow(cat);
+                // Jeśli wybrano opcję "Oba wyniki" (N), w mailu wysyłamy info, że wyniki są w załączniku/na stronie
+                // lub sklejamy obie porady. Tutaj wersja uproszczona:
+                string adviceText = model.Gender == "N"
+                    ? $"Kobieta: {cat.AdviceFemale} <br> Mężczyzna: {cat.AdviceMale}"
+                    : cat.Advice;
+
+                rows += GenerateEmailRow(cat, adviceText, model.Gender);
             }
 
             string emailBody = $@"
                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
                     <h2 style='color: {AppConstants.Colors.Primary}; text-align: center;'>{AppConstants.Texts.Messages.Wyniki}: {model.FormTitle}</h2>
-                    <p style='text-align: center;'>{AppConstants.Texts.Messages.EmailThanks}</p>
-                    <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
                     {rows}
-                    <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-                    <p style='text-align: center; font-size: 12px; color: #888;'>{AppConstants.Texts.Messages.GeneratedBy}</p>
                 </div>";
 
             try
             {
                 await _emailService.SendEmailAsync(email, $"{AppConstants.Texts.Messages.YourResults} {model.FormTitle}", emailBody);
-
-                // POPRAWKA: Używamy Keys dla klucza, Texts dla wartości
                 TempData[AppConstants.Keys.SuccessMessage] = AppConstants.Texts.Messages.EmailSentSuccess;
             }
             catch
@@ -168,25 +238,20 @@ namespace INeed.Controllers
             return View("Result", model);
         }
 
-        private string GenerateEmailRow(CategoryResultVm cat)
+        private string GenerateEmailRow(CategoryResultVm cat, string advice, string gender)
         {
-            bool isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
-            string labelWoman = isEn ? "Woman" : "Kobieta";
-            string labelMan = isEn ? "Man" : "Mężczyzna";
+            string stenInfo = gender == "N"
+                ? $"F: {cat.StenFemale} / M: {cat.StenMale}"
+                : cat.StenUser.ToString();
 
             return $@"
                 <div style='margin-bottom: 25px;'>
-                    <div style='display: flex; justify-content: space-between; align-items: baseline;'>
-                        <strong style='font-size: 1.1em;'>{cat.CategoryName}</strong>
-                        <span style='font-weight: bold;'>{cat.ScoreObtained}/{cat.ScoreMax}</span>
+                    <div style='display: flex; justify-content: space-between;'>
+                        <strong>{cat.CategoryName}</strong>
+                        <span>{cat.ScoreObtained}/{cat.ScoreMax}</span>
                     </div>
-                    <div style='background-color: #f0f0f0; height: 10px; border-radius: 5px; width: 100%; margin: 5px 0 10px 0;'>
-                        <div style='width: {cat.Percent.ToString("0", System.Globalization.CultureInfo.InvariantCulture)}%; background-color: {cat.Color}; height: 100%; border-radius: 5px;'></div>
-                    </div>
-                    <div style='font-size: 0.9em; color: #555; background-color: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #eee;'>
-                        <div><strong>{labelWoman}:</strong> STEN {cat.StenFemale} ({cat.DescFemale})</div>
-                        <div><strong>{labelMan}:</strong> STEN {cat.StenMale} ({cat.DescMale})</div>
-                    </div>
+                    <div>STEN: {stenInfo}</div>
+                    <p style='font-style: italic;'>{advice}</p>
                 </div>";
         }
     }

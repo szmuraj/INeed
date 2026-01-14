@@ -19,27 +19,50 @@ namespace INeed.Data
         public DbSet<Answer>? Answers { get; set; }
         public DbSet<Category> Categories { get; set; }
 
+        // --- BRAKUJĄCE DBSETS ---
+        public DbSet<VisitorResult> VisitorResults { get; set; }
+        public DbSet<VisitorCategoryScore> VisitorCategoryScores { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Konfiguracja kluczy i relacji
             modelBuilder.Entity<Sub>().HasKey(s => s.SubId);
 
+            // Konfiguracja Form -> Questions
             modelBuilder.Entity<Question>()
                 .HasOne(q => q.Form)
                 .WithMany(f => f.Questions)
                 .HasForeignKey(q => q.FormId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Konfiguracja Question -> Answers
             modelBuilder.Entity<Answer>()
                 .HasOne(a => a.Question)
                 .WithMany(q => q.Answers)
                 .HasForeignKey(a => a.QuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // USUNIĘTO: modelBuilder.Entity<Category>().HasData(...)
-            // Dane są już w bazie SQL i nie będą nadpisywane przez kod.
+            // Konfiguracja VisitorResult -> Form
+            modelBuilder.Entity<VisitorResult>()
+                .HasOne(v => v.Form)
+                .WithMany()
+                .HasForeignKey(v => v.FormId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Konfiguracja VisitorResult -> CategoryScores
+            modelBuilder.Entity<VisitorResult>()
+                .HasMany(v => v.CategoryScores)
+                .WithOne(s => s.VisitorResult)
+                .HasForeignKey(s => s.VisitorResultId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Konfiguracja VisitorCategoryScore -> Category
+            modelBuilder.Entity<VisitorCategoryScore>()
+                .HasOne(s => s.Category)
+                .WithMany()
+                .HasForeignKey(s => s.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

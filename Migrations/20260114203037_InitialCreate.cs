@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace INeed.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -60,7 +60,13 @@ namespace INeed.Migrations
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Color = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
                     StenNormsFemale = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    StenNormsMale = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    StenNormsMale = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AdviceLow = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AdviceAvg = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AdviceHigh = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AdviceLowEN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AdviceAvgEN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AdviceHighEN = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -231,6 +237,27 @@ namespace INeed.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "VisitorResults",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    VisitorId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    FormId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Gender = table.Column<string>(type: "nvarchar(1)", maxLength: 1, nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VisitorResults", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_VisitorResults_Forms_FormId",
+                        column: x => x.FormId,
+                        principalTable: "Forms",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Answers",
                 columns: table => new
                 {
@@ -251,6 +278,34 @@ namespace INeed.Migrations
                         principalTable: "Questions",
                         principalColumn: "QuestionId",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "VisitorCategoryScores",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    VisitorResultId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Score = table.Column<int>(type: "int", nullable: false),
+                    MaxScore = table.Column<int>(type: "int", nullable: false),
+                    Sten = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VisitorCategoryScores", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_VisitorCategoryScores_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_VisitorCategoryScores_VisitorResults_VisitorResultId",
+                        column: x => x.VisitorResultId,
+                        principalTable: "VisitorResults",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -301,6 +356,21 @@ namespace INeed.Migrations
                 name: "IX_Questions_FormId",
                 table: "Questions",
                 column: "FormId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VisitorCategoryScores_CategoryId",
+                table: "VisitorCategoryScores",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VisitorCategoryScores_VisitorResultId",
+                table: "VisitorCategoryScores",
+                column: "VisitorResultId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VisitorResults_FormId",
+                table: "VisitorResults",
+                column: "FormId");
         }
 
         /// <inheritdoc />
@@ -325,10 +395,10 @@ namespace INeed.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Categories");
+                name: "Subs");
 
             migrationBuilder.DropTable(
-                name: "Subs");
+                name: "VisitorCategoryScores");
 
             migrationBuilder.DropTable(
                 name: "Questions");
@@ -338,6 +408,12 @@ namespace INeed.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
+
+            migrationBuilder.DropTable(
+                name: "VisitorResults");
 
             migrationBuilder.DropTable(
                 name: "Forms");

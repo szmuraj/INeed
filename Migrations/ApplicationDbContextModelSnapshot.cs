@@ -63,6 +63,24 @@ namespace INeed.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AdviceAvg")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AdviceAvgEN")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AdviceHigh")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AdviceHighEN")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AdviceLow")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AdviceLowEN")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -196,6 +214,65 @@ namespace INeed.Migrations
                     b.HasKey("SubId");
 
                     b.ToTable("Subs");
+                });
+
+            modelBuilder.Entity("INeed.Models.VisitorCategoryScore", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("MaxScore")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Sten")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("VisitorResultId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("VisitorResultId");
+
+                    b.ToTable("VisitorCategoryScores");
+                });
+
+            modelBuilder.Entity("INeed.Models.VisitorResult", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("FormId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("nvarchar(1)");
+
+                    b.Property<string>("VisitorId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FormId");
+
+                    b.ToTable("VisitorResults");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -418,6 +495,36 @@ namespace INeed.Migrations
                     b.Navigation("Form");
                 });
 
+            modelBuilder.Entity("INeed.Models.VisitorCategoryScore", b =>
+                {
+                    b.HasOne("INeed.Models.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("INeed.Models.VisitorResult", "VisitorResult")
+                        .WithMany("CategoryScores")
+                        .HasForeignKey("VisitorResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("VisitorResult");
+                });
+
+            modelBuilder.Entity("INeed.Models.VisitorResult", b =>
+                {
+                    b.HasOne("INeed.Models.Form", "Form")
+                        .WithMany()
+                        .HasForeignKey("FormId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Form");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -477,6 +584,11 @@ namespace INeed.Migrations
             modelBuilder.Entity("INeed.Models.Question", b =>
                 {
                     b.Navigation("Answers");
+                });
+
+            modelBuilder.Entity("INeed.Models.VisitorResult", b =>
+                {
+                    b.Navigation("CategoryScores");
                 });
 #pragma warning restore 612, 618
         }

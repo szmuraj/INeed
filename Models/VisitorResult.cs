@@ -12,15 +12,17 @@ namespace INeed.Models
 
         [Required]
         [Display(Name = "ID odwiedzającego")]
-        public int VisitorId { get; set; } = 100000;
+        [StringLength(50)]
+        public string VisitorId { get; set; }
 
-        public int FormId { get; set; }
+        public Guid FormId { get; set; } // FK jako GUID
 
         [ForeignKey("FormId")]
         public virtual Form Form { get; set; }
 
         [Required]
-        public bool IsMale { get; set; } = true;
+        [StringLength(1)]
+        public string Gender { get; set; } // To pole jest wymagane przez kontroler!
 
         public DateTime Date { get; set; } = DateTime.UtcNow;
 
@@ -43,5 +45,9 @@ namespace INeed.Models
         public virtual Category Category { get; set; }
 
         public int Score { get; set; }
+
+        // --- BRAKUJĄCE POLA ---
+        public int MaxScore { get; set; }
+        public int Sten { get; set; }
     }
 }

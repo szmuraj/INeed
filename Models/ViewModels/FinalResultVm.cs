@@ -11,11 +11,19 @@ namespace INeed.Models.ViewModels
         public int ScoreObtained { get; set; }
         public int ScoreMax { get; set; }
 
-        public int StenFemale { get; set; }
-        public string DescFemale { get; set; }
+        // --- Pola dla wyników ---
+        public int StenUser { get; set; }   // Wynik dla wybranej płci (lub 0 jeśli 'N')
+        public int StenFemale { get; set; } // Wynik obliczony wg norm dla kobiet
+        public int StenMale { get; set; }   // Wynik obliczony wg norm dla mężczyzn
 
-        public int StenMale { get; set; }
+        // --- Opisy STEN (Niski/Średni/Wysoki) ---
+        public string DescFemale { get; set; }
         public string DescMale { get; set; }
+
+        // --- Porady ---
+        public string Advice { get; set; }       // Porada główna (dla wybranej płci)
+        public string AdviceFemale { get; set; } // Porada specyficzna dla kobiet
+        public string AdviceMale { get; set; }   // Porada specyficzna dla mężczyzn
 
         public double Percent => ScoreMax > 0 ? (double)ScoreObtained / ScoreMax * 100 : 0;
     }
@@ -23,6 +31,11 @@ namespace INeed.Models.ViewModels
     public class FinalResultVm
     {
         public string FormTitle { get; set; }
+        public string VisitorId { get; set; }
+
+        // Przekazujemy wybraną płeć: "F", "M" lub "N"
+        public string Gender { get; set; }
+
         public List<CategoryResultVm> Categories { get; set; } = new List<CategoryResultVm>();
     }
 }
