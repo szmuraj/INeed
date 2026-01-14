@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace INeed.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class FormIdToInt : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -77,14 +77,15 @@ namespace INeed.Migrations
                 name: "Forms",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     TitleEN = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    DecryptionShort = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    DecryptionShortEN = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    DecryptionLong = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    DecryptionLongEN = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    Graphic = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    DecryptionShort = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DecryptionShortEN = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DecryptionLong = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DecryptionLongEN = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Graphic = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
@@ -219,7 +220,7 @@ namespace INeed.Migrations
                 columns: table => new
                 {
                     QuestionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    FormId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FormId = table.Column<int>(type: "int", nullable: false),
                     Number = table.Column<int>(type: "int", nullable: false),
                     Query = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     QueryEN = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -242,7 +243,7 @@ namespace INeed.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     VisitorId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    FormId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FormId = table.Column<int>(type: "int", nullable: false),
                     Gender = table.Column<string>(type: "nvarchar(1)", maxLength: 1, nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
