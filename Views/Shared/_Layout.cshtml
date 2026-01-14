@@ -70,25 +70,17 @@
                         </a>
 
 
-                        @* Sprawdzenie aktualnej kultury *@
-                        @{
-                            var isEn = System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("en");
-                        }
-
                         @if (_context.Forms != null)
                         {
                             foreach (var form in _context.Forms.Where(f => f.IsActive).ToList())
                             {
-                                // Logika wyboru tytułu: jeśli angielski i TitleEN nie jest pusty, użyj TitleEN, w przeciwnym razie Title
-                                var dynamicTitle = (isEn && !string.IsNullOrEmpty(form.TitleEN)) ? form.TitleEN : form.Title;
-
                                 <a class="nav-link text-white text-center shadow-sm"
                                    asp-controller="@AppConstants.Routing.QuestionnaireController"
                                    asp-action="@AppConstants.Routing.ActionFill"
                                    asp-route-id="@form.Id"
                                    style="background-color: @GetButtonColor(AppConstants.Routing.QuestionnaireController, AppConstants.Routing.ActionFill, form.Id.ToString());">
 
-                                    @dynamicTitle
+                                    @form.Title
                                 </a>
                             }
                         }

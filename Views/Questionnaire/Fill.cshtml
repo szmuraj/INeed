@@ -2,42 +2,23 @@
 @using System.Globalization
 @model INeed.Models.Form
 @{
+    // POPRAWKA: Używamy Keys.Title zamiast Texts.Messages.Title
+    ViewData[AppConstants.Keys.Title] = Model.Title;
     var isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
-    var title = (isEn && !string.IsNullOrEmpty(Model.TitleEN)) ? Model.TitleEN : Model.Title;
-    ViewData[AppConstants.Keys.Title] = title;
-
-    var descLong = (isEn && !string.IsNullOrEmpty(Model.DecryptionLongEN)) ? Model.DecryptionLongEN : Model.DecryptionLong;
-    var descShort = (isEn && !string.IsNullOrEmpty(Model.DecryptionShortEN)) ? Model.DecryptionShortEN : Model.DecryptionShort;
-    var finalDesc = !string.IsNullOrEmpty(descLong) ? descLong : descShort;
 }
 
-<div class="container-fluid py-4">
-    @* Zmiana na container-fluid dla pewności szerokości *@
+<div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-lg-10">
-
-            @* GŁÓWNY NAGŁÓWEK - WYMUSZONA SZEROKOŚĆ I WIDOCZNOŚĆ *@
-            <div class="d-flex justify-content-between align-items-start mb-5 w-100"
-                 style="color: #D9D9D9 !important; border-bottom: 1px solid rgba(217,217,217,0.1); padding-bottom: 20px;">
-
-                @* Lewa strona: Teksty *@
-                <div style="text-align: left !important; flex: 1;">
-                    <h2 class="fw-bold text-uppercase mb-2" style="color: #D9D9D9 !important; margin: 0;">
-                        @title
-                    </h2>
-                    <p class="lead mb-0" style="font-size: 1.05rem; opacity: 0.85; color: #D9D9D9 !important;">
-                        @finalDesc
+            <div class="d-flex justify-content-between align-items-start mb-5" style="color: #D9D9D9;">
+                <div class="text-start pe-4">
+                    <h2 class="fw-bold text-uppercase mb-3">@Model.Title</h2>
+                    <p class="lead" style="font-size: 1.1rem; opacity: 0.9;">
+                        @(!string.IsNullOrEmpty(Model.DecryptionLong) ? Model.DecryptionLong : Model.DecryptionShort)
                     </p>
                 </div>
-
-                @* Prawa strona: Numeracja stron *@
-                <div id="page-counter" class="text-end ps-4" style="min-width: 120px;">
-                    <div class="fw-bold" style="color: #76FF03 !important; font-size: 1.4rem; line-height: 1;">
-                        <span id="current-page">1</span> / <span id="total-pages">1</span>
-                    </div>
-                    <small class="text-uppercase" style="color: #D9D9D9; font-size: 0.7rem; letter-spacing: 1px; opacity: 0.6;">
-                        @(isEn ? "Page" : "Strona")
-                    </small>
+                <div id="page-counter" class="fw-bold fs-4 text-nowrap" style="opacity: 0.8;">
+                    @(isEn ? "Page" : AppConstants.Texts.Fill.Page) <span id="current-page">1</span> / <span id="total-pages">1</span>
                 </div>
             </div>
 
@@ -98,95 +79,6 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const inputs = document.querySelectorAll('.btn-check');
-            inputs.forEach(input => {
-                input.addEventListener('change', function() {
-                    const wrapper = this.closest('.answers-wrapper');
-                    if (wrapper) wrapper.classList.add('answered');
-                });
-            });
-
-            const questions = document.querySelectorAll('.question-card');
-            const itemsPerPage = 5;
-            let currentPage = 1;
-            const totalPages = Math.ceil(questions.length / itemsPerPage);
-
-            const pageCountSpan = document.getElementById('current-page');
-            const totalPagesSpan = document.getElementById('total-pages');
-            const btnNext = document.getElementById('btn-next');
-            const btnPrev = document.getElementById('btn-prev');
-            const btnSubmit = document.getElementById('btn-submit');
-
-            if(totalPagesSpan) totalPagesSpan.innerText = totalPages;
-
-            function validatePage(page) {
-                const start = (page - 1) * itemsPerPage;
-                const end = start + itemsPerPage;
-                for (let i = start; i < end; i++) {
-                    if (questions[i]) {
-                        const checked = questions[i].querySelector('input[type="radio"]:checked');
-                        if (!checked) return false;
-                    }
-                }
-                return true;
-            }
-
-            function showPage(page) {
-                questions.forEach(q => q.style.display = 'none');
-                const start = (page - 1) * itemsPerPage;
-                const end = start + itemsPerPage;
-                for (let i = start; i < end; i++) {
-                    if (questions[i]) questions[i].style.display = 'block';
-                }
-                if(pageCountSpan) pageCountSpan.innerText = page;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                if(btnPrev) btnPrev.style.display = (page > 1) ? 'block' : 'none';
-                if (page === totalPages) {
-                    if(btnNext) btnNext.style.display = 'none';
-                    if(btnSubmit) btnSubmit.style.display = 'block';
-                } else {
-                    if(btnNext) btnNext.style.display = 'block';
-                    if(btnSubmit) btnSubmit.style.display = 'none';
-                }
-            }
-
-            if(btnNext) btnNext.addEventListener('click', function () {
-                if (validatePage(currentPage)) {
-                    if (currentPage < totalPages) {
-                        currentPage++;
-                        showPage(currentPage);
-                    }
-                } else {
-                    alert("@(isEn ? "Please answer all questions on this page." : AppConstants.Texts.Fill.AlertPage)");
-                }
-            });
-
-            if(btnPrev) btnPrev.addEventListener('click', function () {
-                if (currentPage > 1) {
-                    currentPage--;
-                    showPage(currentPage);
-                }
-            });
-
-            const form = document.getElementById('questionnaireForm');
-            if(form) {
-                form.addEventListener('submit', function(e) {
-                    if (!validatePage(currentPage)) {
-                        e.preventDefault();
-                        alert("@(isEn ? "Please answer all questions before sending." : AppConstants.Texts.Fill.AlertAll)");
-                    }
-                });
-            }
-
-            if(questions.length > 0) showPage(1);
-        });
-    </script>
-}
-
 <style>
     .btn-check:checked + .btn {
         box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.5) !important;
@@ -202,4 +94,87 @@
         color: #fff !important;
         opacity: 1 !important;
     }
+
+    .btn:hover {
+        opacity: 0.9;
+    }
 </style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const inputs = document.querySelectorAll('.btn-check');
+        inputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const wrapper = this.closest('.answers-wrapper');
+                if (wrapper) wrapper.classList.add('answered');
+            });
+        });
+
+        const questions = document.querySelectorAll('.question-card');
+        const itemsPerPage = 5;
+        let currentPage = 1;
+        const totalPages = Math.ceil(questions.length / itemsPerPage);
+
+        const pageCountSpan = document.getElementById('current-page');
+        const totalPagesSpan = document.getElementById('total-pages');
+        const btnNext = document.getElementById('btn-next');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnSubmit = document.getElementById('btn-submit');
+
+        if(totalPagesSpan) totalPagesSpan.innerText = totalPages;
+
+        function validatePage(page) {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            for (let i = start; i < end; i++) {
+                if (questions[i]) {
+                    if (!questions[i].querySelector('input[type="radio"]:checked')) return false;
+                }
+            }
+            return true;
+        }
+
+        function showPage(page) {
+            questions.forEach(q => q.style.display = 'none');
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            for (let i = start; i < end; i++) {
+                if (questions[i]) questions[i].style.display = 'block';
+            }
+            if(pageCountSpan) pageCountSpan.innerText = page;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if(btnPrev) btnPrev.style.display = (page > 1) ? 'block' : 'none';
+            if (page === totalPages) {
+                if(btnNext) btnNext.style.display = 'none';
+                if(btnSubmit) btnSubmit.style.display = 'block';
+            } else {
+                if(btnNext) btnNext.style.display = 'block';
+                if(btnSubmit) btnSubmit.style.display = 'none';
+            }
+        }
+
+        if(btnNext) btnNext.addEventListener('click', function () {
+            if (validatePage(currentPage)) {
+                if (currentPage < totalPages) { currentPage++; showPage(currentPage); }
+            } else {
+                alert("@(isEn ? "Please answer all questions on this page." : AppConstants.Texts.Fill.AlertPage)");
+            }
+        });
+
+        if(btnPrev) btnPrev.addEventListener('click', function () {
+            if (currentPage > 1) { currentPage--; showPage(currentPage); }
+        });
+
+        if(document.getElementById('questionnaireForm')) {
+            document.getElementById('questionnaireForm').addEventListener('submit', function(e) {
+                if (!validatePage(currentPage)) {
+                    e.preventDefault();
+                    alert("@(isEn ? "Please answer all questions before sending." : AppConstants.Texts.Fill.AlertAll)");
+                }
+            });
+        }
+
+        if(questions.length > 0) showPage(1);
+    });
+</script>
