@@ -2,7 +2,6 @@
 
 namespace INeed.Models.ViewModels
 {
-    // CategoryResultVm pozostaje bez zmian (służy tylko do wyświetlania)
     public class CategoryResultVm
     {
         public string CategoryName { get; set; }
@@ -10,7 +9,7 @@ namespace INeed.Models.ViewModels
         public string Color { get; set; }
 
         public int ScoreObtained { get; set; }
-        public int ScoreMax { get; set; } // To wyliczymy w kontrolerze
+        public int ScoreMax { get; set; }
 
         public int StenUser { get; set; }
         public int StenFemale { get; set; }
@@ -28,10 +27,13 @@ namespace INeed.Models.ViewModels
 
     public class FinalResultVm
     {
+        // KLUCZOWE POLE DO NAPRAWY POWROTU
+        public int FormId { get; set; }
+
         public string FormTitle { get; set; }
         public string VisitorId { get; set; }
 
-        // ZMIANA: bool?
+        // true = Mężczyzna, false = Kobieta, null = Brak wyboru
         public bool? IsMale { get; set; }
 
         public List<CategoryResultVm> Categories { get; set; } = new List<CategoryResultVm>();

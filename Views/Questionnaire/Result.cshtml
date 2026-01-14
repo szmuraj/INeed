@@ -5,7 +5,7 @@
 @{
     ViewData[AppConstants.Keys.Title] = Model.FormTitle;
     var isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
-    // ZMIANA: Sprawdzamy czy IsMale jest null
+    // Jeśli IsMale jest null, pokazujemy obie kolumny
     bool showBoth = Model.IsMale == null;
 }
 
@@ -56,7 +56,7 @@
                             <div class="row g-4">
                                 <div class="col-md-6">
                                     <div class="p-4 h-100 border rounded shadow-sm" style="background-color: #fff0f6; border-color: #fcc2d7 !important;">
-                                        <h5 class="fw-bold" style="color: #d63384;">Normy dla Kobiet</h5>
+                                        <h5 class="fw-bold" style="color: #d63384;">@(isEn ? "Female Norms" : "Normy dla Kobiet")</h5>
                                         <hr style="border-color: #d63384; opacity: 0.3;">
                                         <div class="mb-3"><strong>STEN: @cat.StenFemale</strong> <span class="badge bg-white text-dark border ms-2">@cat.DescFemale</span></div>
                                         <p class="mb-0 small text-muted" style="line-height: 1.6;">@cat.AdviceFemale</p>
@@ -64,7 +64,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="p-4 h-100 border rounded shadow-sm" style="background-color: #f0f7ff; border-color: #bac8ff !important;">
-                                        <h5 class="fw-bold" style="color: #0d6efd;">Normy dla Mężczyzn</h5>
+                                        <h5 class="fw-bold" style="color: #0d6efd;">@(isEn ? "Male Norms" : "Normy dla Mężczyzn")</h5>
                                         <hr style="border-color: #0d6efd; opacity: 0.3;">
                                         <div class="mb-3"><strong>STEN: @cat.StenMale</strong> <span class="badge bg-white text-dark border ms-2">@cat.DescMale</span></div>
                                         <p class="mb-0 small text-muted" style="line-height: 1.6;">@cat.AdviceMale</p>
@@ -78,7 +78,6 @@
                                 <h5 class="fw-bold text-primary mb-3">
                                     @(isEn ? "Your Result (STEN)" : "Twój wynik (STEN)"): @cat.StenUser
                                     <span class="badge bg-secondary ms-2 text-white" style="font-size: 0.8rem;">
-                                        @* Logika wyświetlania nazwy płci *@
                                         @(Model.IsMale == false ? (isEn ? "Female" : "Kobieta") : (isEn ? "Male" : "Mężczyzna"))
                                     </span>
                                 </h5>
@@ -95,6 +94,9 @@
 
                 <form asp-action="SendResult" asp-controller="Questionnaire" method="post" class="d-flex flex-column align-items-center">
                     @Html.AntiForgeryToken()
+
+                    @* POLA UKRYTE ZAPEWNIAJĄCE DZIAŁANIE MAILA I ZACHOWANIE STANU *@
+                    <input type="hidden" asp-for="FormId" />
                     <input type="hidden" asp-for="FormTitle" />
                     <input type="hidden" asp-for="VisitorId" />
                     <input type="hidden" asp-for="IsMale" />
@@ -102,11 +104,17 @@
                     @for (int i = 0; i < Model.Categories.Count; i++)
                     {
                         <input type="hidden" asp-for="Categories[i].CategoryName" />
+                        <input type="hidden" asp-for="Categories[i].Color" />
+     @* Naprawia znikanie kolorów *@
                         <input type="hidden" asp-for="Categories[i].ScoreObtained" />
                         <input type="hidden" asp-for="Categories[i].ScoreMax" />
                         <input type="hidden" asp-for="Categories[i].StenUser" />
                         <input type="hidden" asp-for="Categories[i].StenFemale" />
                         <input type="hidden" asp-for="Categories[i].StenMale" />
+
+                        <input type="hidden" asp-for="Categories[i].DescFemale" />
+                        <input type="hidden" asp-for="Categories[i].DescMale" />
+
                         <input type="hidden" asp-for="Categories[i].Advice" />
                         <input type="hidden" asp-for="Categories[i].AdviceFemale" />
                         <input type="hidden" asp-for="Categories[i].AdviceMale" />
@@ -133,9 +141,21 @@
                 </form>
             </div>
 
-            <div class="mt-5">
-                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary px-5 py-2" style="border-radius: 10px;">
+            <div class="mt-5 d-flex gap-3 justify-content-center">
+                @* Przycisk powrotu do strony głównej *@
+                <a asp-controller="Home" asp-action="Index"
+                   asp-route-id="@Model.VisitorId"
+                   class="btn btn-outline-secondary px-5 py-2" style="border-radius: 10px;">
                     @AppConstants.Texts.Buttons.BackToHome
+                </a>
+
+                @* Przycisk ponownego wypełnienia (NAPRAWIONY) *@
+                <a asp-controller="Questionnaire"
+                   asp-action="Fill"
+                   asp-route-kw="@Model.FormId"
+                   asp-route-id="@Model.VisitorId"
+                   class="btn btn-primary px-5 py-2 fw-bold" style="border-radius: 10px;">
+                    @(isEn ? "Retake Test" : "Wypełnij ponownie")
                 </a>
             </div>
         </div>

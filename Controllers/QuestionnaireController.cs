@@ -24,8 +24,9 @@ namespace INeed.Controllers
             _emailService = emailService;
         }
 
+        // GET: /Questionnaire/Fill?kw=1&id=000000
         [HttpGet(AppConstants.FillRoute)]
-        public async Task<IActionResult> Fill(int kw, string id = "000000")
+        public async Task<IActionResult> Fill(int kw, [FromQuery(Name = "id")] string visitorId = "000000")
         {
             if (kw == 0) return NotFound();
 
@@ -35,17 +36,19 @@ namespace INeed.Controllers
 
             if (form == null || !form.IsActive) return NotFound();
 
-            ViewBag.VisitorId = id;
+            // Przekazujemy ID do widoku
+            ViewBag.VisitorId = visitorId;
+
             return View(form);
         }
 
-        // ZMIANA: parametr isMale (bool?)
+        // POST: Zapis wyników
         [HttpPost(AppConstants.FillRoute)]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Fill(int kw, string id, bool? isMale, IFormCollection collection)
+        public async Task<IActionResult> Fill(int kw, string visitorId, bool? isMale, IFormCollection collection)
         {
-            if (string.IsNullOrEmpty(id)) id = "000000";
-            // isMale przyjdzie jako true, false lub null (z pustego value)
+            // Zabezpieczenie: jeśli puste, ustaw 000000
+            if (string.IsNullOrEmpty(visitorId)) visitorId = "000000";
 
             var questionnaire = await _context.Forms
                 .Include(f => f.Questions).ThenInclude(q => q.Answers)
@@ -56,15 +59,23 @@ namespace INeed.Controllers
             bool isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
             string formTitle = (isEn && !string.IsNullOrEmpty(questionnaire.TitleEN)) ? questionnaire.TitleEN : questionnaire.Title;
 
-            var finalResult = new FinalResultVm { FormTitle = formTitle, VisitorId = id, IsMale = isMale };
+            // TWORZENIE VIEW MODELU (z przypisanym FormId!)
+            var finalResult = new FinalResultVm
+            {
+                FormId = kw, // <--- Tutaj przekazujemy ID formularza, żeby widok Result go znał
+                FormTitle = formTitle,
+                VisitorId = visitorId,
+                IsMale = isMale
+            };
+
             var dbCategories = await _context.Categories.AsNoTracking().ToListAsync();
 
             var resultDb = new VisitorResult
             {
                 Id = Guid.NewGuid(),
-                VisitorId = id,
+                VisitorId = visitorId,
                 FormId = questionnaire.Id,
-                IsMale = isMale, // Zapisujemy bool?
+                IsMale = isMale,
                 Date = DateTime.UtcNow
             };
 
@@ -83,7 +94,6 @@ namespace INeed.Controllers
 
                 foreach (var q in group)
                 {
-                    // Obliczamy maxScore "w locie" na potrzeby widoku
                     maxScore += q.Answers.Any() ? q.Answers.Max(a => a.Score) : 0;
                     if (collection.TryGetValue($"Question_{q.QuestionId}", out var val) && Guid.TryParse(val, out Guid aId))
                     {
@@ -91,27 +101,17 @@ namespace INeed.Controllers
                     }
                 }
 
-                // Obliczenia "w locie" dla ViewModelu
                 int stenF = CalculateSten(actualScore, categoryDef.StenNormsFemale);
                 int stenM = CalculateSten(actualScore, categoryDef.StenNormsMale);
+
                 string adviceF = GetAdvice(stenF, categoryDef, isEn);
                 string adviceM = GetAdvice(stenM, categoryDef, isEn);
 
                 int userSten = 0;
                 string userAdvice = "";
 
-                // Logika dla bool?
-                if (isMale == false) // Kobieta
-                {
-                    userSten = stenF;
-                    userAdvice = adviceF;
-                }
-                else if (isMale == true) // Mężczyzna
-                {
-                    userSten = stenM;
-                    userAdvice = adviceM;
-                }
-                // Jeśli null, userSten zostaje 0, a widok pokaże obie kolumny
+                if (isMale == false) { userSten = stenF; userAdvice = adviceF; }
+                else if (isMale == true) { userSten = stenM; userAdvice = adviceM; }
 
                 string displayName = (isEn && !string.IsNullOrEmpty(categoryDef.NameEN)) ? categoryDef.NameEN : categoryDef.Name;
 
@@ -131,7 +131,6 @@ namespace INeed.Controllers
                     DescMale = GetStenDescription(stenM)
                 });
 
-                // Do bazy zapisujemy TYLKO surowy wynik i powiązanie z kategorią
                 resultDb.CategoryScores.Add(new VisitorCategoryScore
                 {
                     Id = Guid.NewGuid(),
@@ -196,7 +195,6 @@ namespace INeed.Controllers
             string rows = "";
             foreach (var cat in model.Categories)
             {
-                // Jeśli IsMale jest null, wyświetl obie porady
                 string adviceText = model.IsMale == null
                     ? $"Kobieta: {cat.AdviceFemale} <br> Mężczyzna: {cat.AdviceMale}"
                     : cat.Advice;
@@ -225,7 +223,6 @@ namespace INeed.Controllers
 
         private string GenerateEmailRow(CategoryResultVm cat, string advice, bool? isMale)
         {
-            // Formatowanie w mailu zależne od isMale
             string stenInfo = isMale == null
                 ? $"F: {cat.StenFemale} / M: {cat.StenMale}"
                 : cat.StenUser.ToString();
