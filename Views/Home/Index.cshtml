@@ -1,12 +1,15 @@
-﻿@model IEnumerable<INeed.Models.Form>
-@using INeed.Helpers
+﻿@using INeed.Helpers
+@using System.Globalization
+@model IEnumerable<INeed.Models.Form>
 
 @{
-    ViewData["Title"] = "Strona główna";
+    ViewData[AppConstants.Keys.Title] = AppConstants.Texts.Home.Header;
+    var isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
 }
 
 <div class="d-flex flex-column gap-4">
 
+    @* Nagłówek sekcji z tłumaczeniami *@
     <div class="border-bottom border-white border-opacity-25 pb-3">
         <h2 class="fw-bold">@AppConstants.Texts.Home.Header</h2>
         <p class="text-white-50 mb-0">@AppConstants.Texts.Home.SubHeader</p>
@@ -18,17 +21,20 @@
         {
             @foreach (var item in Model)
             {
-                // col-md-6 oznacza 2 kafelki na rząd na tabletach
-                // col-lg-4 oznacza 3 kafelki na rząd na komputerach
+                // Logika wyboru języka dla tytułu i krótkiego opisu
+                var title = (isEn && !string.IsNullOrEmpty(item.TitleEN)) ? item.TitleEN : item.Title;
+                var desc = (isEn && !string.IsNullOrEmpty(item.DecryptionShortEN)) ? item.DecryptionShortEN : item.DecryptionShort;
+
                 <div class="col-md-6 col-lg-4">
 
                     <div class="d-flex flex-column h-100 border border-secondary border-opacity-25 shadow-sm mx-auto"
                          style="background-color: #F9FDF4; border-radius: 10px; overflow: hidden; transition: transform 0.2s; max-width: 250px;">
 
+                        @* Sekcja grafiki *@
                         @if (!string.IsNullOrEmpty(item.Graphic))
                         {
                             <img src="~/images/@item.Graphic"
-                                 alt="@item.Title"
+                                 alt="@title"
                                  class="w-100"
                                  style="height: 198px; object-fit: cover;" />
                         }
@@ -36,31 +42,33 @@
                         {
                             <div class="w-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-10"
                                  style="height: 198px;">
-                                <span class="text-dark opacity-50">Brak grafiki</span>
+                                <span class="text-dark opacity-50">@(isEn ? "No image" : "Brak grafiki")</span>
                             </div>
                         }
 
                         <div class="p-3 d-flex flex-column flex-grow-1">
 
+                            @* Tytuł kwestionariusza *@
                             <h5 class="fw-bold text-uppercase mb-2 text-truncate"
                                 style="color: #000; letter-spacing: 0.5px;"
-                                title="@item.Title">
-                                @item.Title
+                                title="@title">
+                                @title
                             </h5>
 
+                            @* Krótki opis *@
                             <p class="small text-dark mb-3 flex-grow-1" style="font-size: 0.85rem;">
-                                @item.DecryptionShort
+                                @desc
                             </p>
 
                             <div class="mt-auto">
-
-
-                                    <a asp-controller="Questionnaire" asp-action="Fill" asp-route-id="@item.Id"
-                                       class="btn w-100 btn-sm fw-bold"
-                                       style="background-color: #76FF03; color: #000; border: none;">
-                                        SPRAWDŹ &rarr;
-                                    </a>
-
+                                @* ZMIANA: używamy 'kw' zamiast 'id' *@
+                                <a asp-controller="@AppConstants.Routing.QuestionnaireController"
+                                   asp-action="@AppConstants.Routing.ActionFill"
+                                   asp-route-kw="@item.Id"
+                                   class="btn w-100 btn-sm fw-bold"
+                                   style="background-color: @AppConstants.Colors.ButtonSubmit; color: #000; border: none;">
+                                    @(isEn ? "CHECK" : "SPRAWDŹ") &rarr;
+                                </a>
                             </div>
                         </div>
 
@@ -70,13 +78,14 @@
         }
         else
         {
+            @* Komunikat o braku ankiet *@
             <div class="col-12">
                 <div class="alert alert-info d-flex align-items-center justify-content-center bg-transparent text-white border-white border-opacity-25" role="alert">
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" />
                     </svg>
                     <div>
-                        Brak aktywnych kwestionariuszy w bazie danych.
+                        @(isEn ? "No active questionnaires in the database." : "Brak aktywnych kwestionariuszy w bazie danych.")
                     </div>
                 </div>
             </div>

@@ -24,15 +24,15 @@ namespace INeed.Controllers
             _emailService = emailService;
         }
 
-        // ZMIANA: id jest teraz int
-        [HttpGet(AppConstants.FillRoute + "/{id}")]
-        public async Task<IActionResult> Fill(int id, string visitorId = "000000")
+        // ZMIANA: Usunięto "/{id}" z trasy. Teraz adres będzie wyglądał: /Questionnaire/Fill?kw=1
+        [HttpGet(AppConstants.FillRoute)]
+        public async Task<IActionResult> Fill(int kw, string visitorId = "000000")
         {
-            if (id == 0) return NotFound();
+            if (kw == 0) return NotFound();
 
             var form = await _context.Forms
                 .Include(f => f.Questions).ThenInclude(q => q.Answers)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == kw);
 
             if (form == null || !form.IsActive) return NotFound();
 
@@ -40,17 +40,16 @@ namespace INeed.Controllers
             return View(form);
         }
 
-        // ZMIANA: id jest teraz int
-        [HttpPost(AppConstants.FillRoute + "/{id}")]
+        [HttpPost(AppConstants.FillRoute)]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Fill(int id, string visitorId, string gender, IFormCollection collection)
+        public async Task<IActionResult> Fill(int kw, string visitorId, string gender, IFormCollection collection)
         {
             if (string.IsNullOrEmpty(visitorId)) visitorId = "000000";
             if (string.IsNullOrEmpty(gender)) gender = "N";
 
             var questionnaire = await _context.Forms
                 .Include(f => f.Questions).ThenInclude(q => q.Answers)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == kw);
 
             if (questionnaire == null) return NotFound();
 
@@ -64,7 +63,7 @@ namespace INeed.Controllers
             {
                 Id = Guid.NewGuid(),
                 VisitorId = visitorId,
-                FormId = questionnaire.Id, // To jest teraz int
+                FormId = questionnaire.Id,
                 Gender = gender,
                 Date = DateTime.UtcNow
             };
@@ -136,7 +135,6 @@ namespace INeed.Controllers
             return View("Result", finalResult);
         }
 
-        // Metody pomocnicze (CalculateSten, GetAdvice, SendResult) pozostają bez zmian
         private int CalculateSten(int score, string normsString)
         {
             if (string.IsNullOrEmpty(normsString)) return 0;
@@ -171,8 +169,63 @@ namespace INeed.Controllers
         public async Task<IActionResult> SendResult(FinalResultVm model, string email)
         {
             if (string.IsNullOrEmpty(email)) return RedirectToAction("Index", "Home");
-            // ... (Tutaj logika maila bez zmian, tylko ViewBag/Model muszą pasować)
+
+            var existingSub = await _context.Subs.FirstOrDefaultAsync(s => s.Email == email);
+            if (existingSub == null)
+            {
+                _context.Subs.Add(new Sub { Email = email, IsActive = true, Newsletter = true, AddedAt = DateTime.Now });
+                await _context.SaveChangesAsync();
+            }
+            else if (!existingSub.IsActive)
+            {
+                existingSub.IsActive = true;
+                await _context.SaveChangesAsync();
+            }
+
+            string rows = "";
+            foreach (var cat in model.Categories)
+            {
+                string adviceText = model.Gender == "N"
+                    ? $"Kobieta: {cat.AdviceFemale} <br> Mężczyzna: {cat.AdviceMale}"
+                    : cat.Advice;
+
+                rows += GenerateEmailRow(cat, adviceText, model.Gender);
+            }
+
+            string emailBody = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                    <h2 style='color: {AppConstants.Colors.Primary}; text-align: center;'>{AppConstants.Texts.Messages.Wyniki}: {model.FormTitle}</h2>
+                    {rows}
+                </div>";
+
+            try
+            {
+                await _emailService.SendEmailAsync(email, $"{AppConstants.Texts.Messages.YourResults} {model.FormTitle}", emailBody);
+                TempData[AppConstants.Keys.SuccessMessage] = AppConstants.Texts.Messages.EmailSentSuccess;
+            }
+            catch
+            {
+                TempData[AppConstants.Keys.ErrorMessage] = AppConstants.Texts.Messages.EmailSentError;
+            }
+
             return View("Result", model);
+        }
+
+        private string GenerateEmailRow(CategoryResultVm cat, string advice, string gender)
+        {
+            string stenInfo = gender == "N"
+                ? $"F: {cat.StenFemale} / M: {cat.StenMale}"
+                : cat.StenUser.ToString();
+
+            return $@"
+                <div style='margin-bottom: 25px;'>
+                    <div style='display: flex; justify-content: space-between;'>
+                        <strong>{cat.CategoryName}</strong>
+                        <span>{cat.ScoreObtained}/{cat.ScoreMax}</span>
+                    </div>
+                    <div>STEN: {stenInfo}</div>
+                    <p style='font-style: italic;'>{advice}</p>
+                </div>";
         }
     }
 }

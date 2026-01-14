@@ -37,10 +37,10 @@
                 </div>
             </div>
 
-            <form id="questionnaireForm" method="post" asp-action="Fill" asp-route-id="@Model.Id">
+            @* ZMIANA: asp-route-kw zamiast id *@
+            <form id="questionnaireForm" method="post" asp-action="Fill" asp-route-kw="@Model.Id">
                 <input type="hidden" name="visitorId" value="@visitorId" />
 
-                @* --- SEKCJA WYBORU PŁCI --- *@
                 <div class="card mb-4 border-0 shadow-sm" style="border-radius: 10px; background-color: #f8f9fa;">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-3 text-dark">@(isEn ? "Select your gender:" : "Wybierz swoją płeć:")</h5>
@@ -68,7 +68,6 @@
                         </div>
                     </div>
                 </div>
-                @* --------------------------- *@
 
                 @if (Model.Questions != null && Model.Questions.Any())
                 {
