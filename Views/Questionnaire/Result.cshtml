@@ -5,8 +5,8 @@
 @{
     ViewData[AppConstants.Keys.Title] = Model.FormTitle;
     var isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
-    // Czy pokazać widok podwójny (dla obu płci)
-    bool showBoth = Model.Gender == "N";
+    // ZMIANA: Sprawdzamy czy IsMale jest null
+    bool showBoth = Model.IsMale == null;
 }
 
 <div class="container py-5">
@@ -56,35 +56,18 @@
                             <div class="row g-4">
                                 <div class="col-md-6">
                                     <div class="p-4 h-100 border rounded shadow-sm" style="background-color: #fff0f6; border-color: #fcc2d7 !important;">
-                                        <h5 class="fw-bold" style="color: #d63384;">
-                                            Normy dla Kobiet
-                                        </h5>
+                                        <h5 class="fw-bold" style="color: #d63384;">Normy dla Kobiet</h5>
                                         <hr style="border-color: #d63384; opacity: 0.3;">
-
-                                        <div class="mb-3">
-                                            <strong>STEN: @cat.StenFemale</strong>
-                                            <span class="badge bg-white text-dark border ms-2">@cat.DescFemale</span>
-                                        </div>
-                                        <p class="mb-0 small text-muted" style="line-height: 1.6;">
-                                            @cat.AdviceFemale
-                                        </p>
+                                        <div class="mb-3"><strong>STEN: @cat.StenFemale</strong> <span class="badge bg-white text-dark border ms-2">@cat.DescFemale</span></div>
+                                        <p class="mb-0 small text-muted" style="line-height: 1.6;">@cat.AdviceFemale</p>
                                     </div>
                                 </div>
-
                                 <div class="col-md-6">
                                     <div class="p-4 h-100 border rounded shadow-sm" style="background-color: #f0f7ff; border-color: #bac8ff !important;">
-                                        <h5 class="fw-bold" style="color: #0d6efd;">
-                                            Normy dla Mężczyzn
-                                        </h5>
+                                        <h5 class="fw-bold" style="color: #0d6efd;">Normy dla Mężczyzn</h5>
                                         <hr style="border-color: #0d6efd; opacity: 0.3;">
-
-                                        <div class="mb-3">
-                                            <strong>STEN: @cat.StenMale</strong>
-                                            <span class="badge bg-white text-dark border ms-2">@cat.DescMale</span>
-                                        </div>
-                                        <p class="mb-0 small text-muted" style="line-height: 1.6;">
-                                            @cat.AdviceMale
-                                        </p>
+                                        <div class="mb-3"><strong>STEN: @cat.StenMale</strong> <span class="badge bg-white text-dark border ms-2">@cat.DescMale</span></div>
+                                        <p class="mb-0 small text-muted" style="line-height: 1.6;">@cat.AdviceMale</p>
                                     </div>
                                 </div>
                             </div>
@@ -95,12 +78,11 @@
                                 <h5 class="fw-bold text-primary mb-3">
                                     @(isEn ? "Your Result (STEN)" : "Twój wynik (STEN)"): @cat.StenUser
                                     <span class="badge bg-secondary ms-2 text-white" style="font-size: 0.8rem;">
-                                        @(Model.Gender == "F" ? (isEn ? "Female" : "Kobieta") : (isEn ? "Male" : "Mężczyzna"))
+                                        @* Logika wyświetlania nazwy płci *@
+                                        @(Model.IsMale == false ? (isEn ? "Female" : "Kobieta") : (isEn ? "Male" : "Mężczyzna"))
                                     </span>
                                 </h5>
-                                <p class="mb-0" style="font-size: 1.05rem; line-height: 1.6;">
-                                    @cat.Advice
-                                </p>
+                                <p class="mb-0" style="font-size: 1.05rem; line-height: 1.6;">@cat.Advice</p>
                             </div>
                         }
                     </div>
@@ -115,18 +97,16 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="FormTitle" />
                     <input type="hidden" asp-for="VisitorId" />
-                    <input type="hidden" asp-for="Gender" />
+                    <input type="hidden" asp-for="IsMale" />
 
                     @for (int i = 0; i < Model.Categories.Count; i++)
                     {
                         <input type="hidden" asp-for="Categories[i].CategoryName" />
                         <input type="hidden" asp-for="Categories[i].ScoreObtained" />
                         <input type="hidden" asp-for="Categories[i].ScoreMax" />
-
                         <input type="hidden" asp-for="Categories[i].StenUser" />
                         <input type="hidden" asp-for="Categories[i].StenFemale" />
                         <input type="hidden" asp-for="Categories[i].StenMale" />
-
                         <input type="hidden" asp-for="Categories[i].Advice" />
                         <input type="hidden" asp-for="Categories[i].AdviceFemale" />
                         <input type="hidden" asp-for="Categories[i].AdviceMale" />

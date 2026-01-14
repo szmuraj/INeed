@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace INeed.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260114204356_FormIdToInt")]
-    partial class FormIdToInt
+    [Migration("20260114210915_OptimizeScoreAndGender")]
+    partial class OptimizeScoreAndGender
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -225,13 +225,7 @@ namespace INeed.Migrations
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("MaxScore")
-                        .HasColumnType("int");
-
                     b.Property<int>("Score")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Sten")
                         .HasColumnType("int");
 
                     b.Property<Guid>("VisitorResultId")
@@ -258,10 +252,8 @@ namespace INeed.Migrations
                     b.Property<int>("FormId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasMaxLength(1)
-                        .HasColumnType("nvarchar(1)");
+                    b.Property<bool?>("IsMale")
+                        .HasColumnType("bit");
 
                     b.Property<string>("VisitorId")
                         .IsRequired()

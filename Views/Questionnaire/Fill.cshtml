@@ -20,50 +20,38 @@
             <div class="d-flex justify-content-between align-items-start mb-5 w-100"
                  style="color: #D9D9D9 !important; border-bottom: 1px solid rgba(217,217,217,0.1); padding-bottom: 20px;">
                 <div style="text-align: left !important; flex: 1;">
-                    <h2 class="fw-bold text-uppercase mb-2" style="color: #D9D9D9 !important; margin: 0;">
-                        @title
-                    </h2>
-                    <p class="lead mb-0" style="font-size: 1.05rem; opacity: 0.85; color: #D9D9D9 !important;">
-                        @finalDesc
-                    </p>
+                    <h2 class="fw-bold text-uppercase mb-2" style="color: #D9D9D9 !important; margin: 0;">@title</h2>
+                    <p class="lead mb-0" style="font-size: 1.05rem; opacity: 0.85; color: #D9D9D9 !important;">@finalDesc</p>
                 </div>
                 <div id="page-counter" class="text-end ps-4" style="min-width: 120px;">
                     <div class="fw-bold" style="color: #76FF03 !important; font-size: 1.4rem; line-height: 1;">
                         <span id="current-page">1</span> / <span id="total-pages">1</span>
                     </div>
-                    <small class="text-uppercase" style="color: #D9D9D9; font-size: 0.7rem; letter-spacing: 1px; opacity: 0.6;">
-                        @(isEn ? "Page" : "Strona")
-                    </small>
+                    <small class="text-uppercase" style="color: #D9D9D9; font-size: 0.7rem; letter-spacing: 1px; opacity: 0.6;">@(isEn ? "Page" : "Strona")</small>
                 </div>
             </div>
 
-            @* ZMIANA: asp-route-kw zamiast id *@
-            <form id="questionnaireForm" method="post" asp-action="Fill" asp-route-kw="@Model.Id">
-                <input type="hidden" name="visitorId" value="@visitorId" />
+            <form id="questionnaireForm" method="post" asp-action="Fill" asp-route-kw="@Model.Id" asp-route-id="@visitorId">
+                <input type="hidden" name="id" value="@visitorId" />
 
                 <div class="card mb-4 border-0 shadow-sm" style="border-radius: 10px; background-color: #f8f9fa;">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-3 text-dark">@(isEn ? "Select your gender:" : "Wybierz swoją płeć:")</h5>
-                        <p class="text-muted small mb-3">@(isEn ? "This selection affects result norms. Choose 'Don't specify' to see norms for both genders." : "Wybór ma wpływ na normy. Wybierz 'Nie podaję', aby zobaczyć wyniki dla obu płci.")</p>
+                        <p class="text-muted small mb-3">@(isEn ? "This selection affects result norms." : "Wybór ma wpływ na normy. Wybierz 'Nie podaję', aby zobaczyć wyniki dla obu płci.")</p>
 
                         <div class="d-flex flex-wrap gap-4">
+                            @* ZMIANA: Value="false" dla Kobiety, "true" dla Mężczyzny, "" dla Null *@
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="gender" id="genderF" value="F" style="transform: scale(1.2);">
-                                <label class="form-check-label fw-bold ms-1" for="genderF">
-                                    @(isEn ? "Female" : "Kobieta")
-                                </label>
+                                <input class="form-check-input" type="radio" name="isMale" id="genderF" value="false" style="transform: scale(1.2);">
+                                <label class="form-check-label fw-bold ms-1" for="genderF">@(isEn ? "Female" : "Kobieta")</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="gender" id="genderM" value="M" style="transform: scale(1.2);">
-                                <label class="form-check-label fw-bold ms-1" for="genderM">
-                                    @(isEn ? "Male" : "Mężczyzna")
-                                </label>
+                                <input class="form-check-input" type="radio" name="isMale" id="genderM" value="true" style="transform: scale(1.2);">
+                                <label class="form-check-label fw-bold ms-1" for="genderM">@(isEn ? "Male" : "Mężczyzna")</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="gender" id="genderN" value="N" checked style="transform: scale(1.2);">
-                                <label class="form-check-label fw-bold ms-1" for="genderN">
-                                    @(isEn ? "Don't specify (Show both)" : "Nie podaję (Pokaż oba wyniki)")
-                                </label>
+                                <input class="form-check-input" type="radio" name="isMale" id="genderN" value="" checked style="transform: scale(1.2);">
+                                <label class="form-check-label fw-bold ms-1" for="genderN">@(isEn ? "Don't specify" : "Nie podaję")</label>
                             </div>
                         </div>
                     </div>
@@ -100,25 +88,14 @@
                     </div>
 
                     <div class="mt-5 d-flex gap-3">
-                        <button type="button" id="btn-prev" class="btn btn-secondary fw-bold py-3 shadow-sm"
-                                style="border-radius: 10px; font-size: 1.1rem; display: none; width: 150px;">
-                            &larr; @(isEn ? "Back" : AppConstants.Texts.Buttons.Back)
-                        </button>
-                        <button type="button" id="btn-next" class="btn fw-bold py-3 shadow-sm flex-grow-1"
-                                style="background-color: @AppConstants.Colors.ButtonAction; color: @AppConstants.Colors.Black; border: none; border-radius: 10px; font-size: 1.1rem;">
-                            @(isEn ? "Continue" : AppConstants.Texts.Buttons.Continue) &rarr;
-                        </button>
-                        <button type="submit" id="btn-submit" class="btn fw-bold py-3 shadow-sm flex-grow-1"
-                                style="background-color: @AppConstants.Colors.ButtonSubmit; color: @AppConstants.Colors.Black; border-radius: 10px; font-size: 1.1rem; display: none;">
-                            @(isEn ? "Send Answers" : AppConstants.Texts.Buttons.SendAnswers) &rarr;
-                        </button>
+                        <button type="button" id="btn-prev" class="btn btn-secondary fw-bold py-3 shadow-sm" style="border-radius: 10px; font-size: 1.1rem; display: none; width: 150px;">&larr; @(isEn ? "Back" : AppConstants.Texts.Buttons.Back)</button>
+                        <button type="button" id="btn-next" class="btn fw-bold py-3 shadow-sm flex-grow-1" style="background-color: @AppConstants.Colors.ButtonAction; color: @AppConstants.Colors.Black; border: none; border-radius: 10px; font-size: 1.1rem;">@(isEn ? "Continue" : AppConstants.Texts.Buttons.Continue) &rarr;</button>
+                        <button type="submit" id="btn-submit" class="btn fw-bold py-3 shadow-sm flex-grow-1" style="background-color: @AppConstants.Colors.ButtonSubmit; color: @AppConstants.Colors.Black; border-radius: 10px; font-size: 1.1rem; display: none;">@(isEn ? "Send Answers" : AppConstants.Texts.Buttons.SendAnswers) &rarr;</button>
                     </div>
                 }
                 else
                 {
-                    <div class="alert alert-warning">
-                        @(isEn ? "No questions available." : AppConstants.Texts.Fill.NoQuestions)
-                    </div>
+                    <div class="alert alert-warning">@(isEn ? "No questions available." : AppConstants.Texts.Fill.NoQuestions)</div>
                 }
             </form>
         </div>
@@ -126,6 +103,7 @@
 </div>
 
 @section Scripts {
+    @* Skrypt JS pozostaje ten sam *@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const inputs = document.querySelectorAll('.btn-check');
@@ -183,20 +161,14 @@
 
             if(btnNext) btnNext.addEventListener('click', function () {
                 if (validatePage(currentPage)) {
-                    if (currentPage < totalPages) {
-                        currentPage++;
-                        showPage(currentPage);
-                    }
+                    if (currentPage < totalPages) { currentPage++; showPage(currentPage); }
                 } else {
                     alert("@(isEn ? "Please answer all questions on this page." : AppConstants.Texts.Fill.AlertPage)");
                 }
             });
 
             if(btnPrev) btnPrev.addEventListener('click', function () {
-                if (currentPage > 1) {
-                    currentPage--;
-                    showPage(currentPage);
-                }
+                if (currentPage > 1) { currentPage--; showPage(currentPage); }
             });
 
             const form = document.getElementById('questionnaireForm');
