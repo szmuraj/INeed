@@ -1,26 +1,26 @@
 ﻿@using INeed.Helpers
-@model INeed.Models.ViewModels.InfoPageVm
-
 @{
-    ViewData[AppConstants.Keys.Title] = Model.Title;
+    // Widok nie ma modelu (@model), korzysta z ViewBag
 }
 
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="text-center mb-5">
-                <h1 class="fw-bold display-5">@Model.Title</h1>
-                <p class="text-muted lead">@Model.Subtitle</p>
+                <h1 class="fw-bold display-5">@ViewBag.MainTitle</h1>
+                <p class="text-muted lead">@ViewBag.Subtitle</p>
             </div>
 
             <div class="card shadow-sm border-0" style="border-radius: 15px;">
                 <div class="card-body p-5">
-                    @Html.Raw(Model.HtmlContent)
+                    @Html.Raw(ViewBag.HtmlContent)
                 </div>
             </div>
 
             <div class="text-center mt-5">
-                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark px-4 py-2" style="border-radius: 10px;">
+                <a asp-controller="Home" asp-action="Index"
+                   asp-route-visitorId="@ViewBag.VisitorId"
+                   class="btn btn-outline-dark px-4 py-2" style="border-radius: 10px;">
                     &larr; @AppConstants.Texts.Buttons.BackToHome
                 </a>
             </div>

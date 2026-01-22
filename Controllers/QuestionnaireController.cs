@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using INeed.Data;
 using INeed.Models;
@@ -89,9 +85,7 @@ namespace INeed.Controllers
                 {
                     maxScore += q.Answers.Any() ? q.Answers.Max(a => a.Score) : 0;
 
-                    // POPRAWKA PUNKTACJI: Szukamy pierwszego poprawnego GUID w danych formularza
                     string key = $"Question_{q.QuestionId}";
-
                     if (collection.ContainsKey(key))
                     {
                         var submittedValues = collection[key];
@@ -166,27 +160,15 @@ namespace INeed.Controllers
             catch { return 0; }
         }
 
+        // ZMIANA: Skrócona logika wyboru języka (Pattern Match)
         private string GetAdvice(int sten, Category cat)
         {
             if (cat == null) return string.Empty;
 
-            string pl = "";
-            string en = "";
+            if (sten <= 4) return AppConstants.SelectContent(cat.AdviceLow, cat.AdviceLowEN);
+            if (sten <= 6) return AppConstants.SelectContent(cat.AdviceAvg, cat.AdviceAvgEN);
 
-            if (sten <= 4)
-            {
-                pl = cat.AdviceLow; en = cat.AdviceLowEN;
-            }
-            else if (sten <= 6)
-            {
-                pl = cat.AdviceAvg; en = cat.AdviceAvgEN;
-            }
-            else
-            {
-                pl = cat.AdviceHigh; en = cat.AdviceHighEN;
-            }
-
-            return AppConstants.SelectContent(pl, en);
+            return AppConstants.SelectContent(cat.AdviceHigh, cat.AdviceHighEN);
         }
 
         private string GetStenDescription(int sten)

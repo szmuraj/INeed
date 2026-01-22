@@ -6,7 +6,6 @@ using INeed.Services;
 using INeed.Helpers;
 using System.Diagnostics;
 using System.Text;
-using INeed.Models.ViewModels;
 
 namespace INeed.Controllers
 {
@@ -23,29 +22,48 @@ namespace INeed.Controllers
 
         public async Task<IActionResult> Index(string visitorId)
         {
+            // 1. Pobieramy lub ustawiamy domyœlne ID
             visitorId = AppConstants.GetVisitorId(visitorId);
             ViewBag.VisitorId = visitorId;
 
+            // 2. Pobieramy ankiety z bazy (TO BY£O POMINIÊTE)
             var forms = _context.Forms != null
                 ? await _context.Forms.Where(f => f.IsActive).ToListAsync()
                 : new List<Form>();
 
+            // 3. Przekazujemy je do widoku
             return View(forms);
         }
 
-        // Metoda obs³uguj¹ca Privacy/Terms (fallback dla modali lub linków bezpoœrednich)
+        // Metoda Info zastêpuj¹ca Privacy i Terms (bez InfoPageVm)
         public IActionResult Info(string id, string visitorId)
         {
             visitorId = AppConstants.GetVisitorId(visitorId);
             ViewBag.VisitorId = visitorId;
 
-            var model = AppConstants.GetPageContent(id);
-            if (model == null)
+            var txt = AppConstants.Texts;
+
+            switch (id?.ToLower())
             {
-                return RedirectToAction(nameof(Index), new { visitorId });
+                case "privacy":
+                    ViewData[AppConstants.Keys.Title] = txt.Layout.PrivacyPolicy;
+                    ViewBag.MainTitle = txt.Layout.PrivacyPolicy;
+                    ViewBag.Subtitle = txt.Layout.CookieHeader;
+                    ViewBag.HtmlContent = txt.PolicyContent.PrivacyAndCookies;
+                    break;
+
+                case "terms":
+                    ViewData[AppConstants.Keys.Title] = txt.Layout.Terms;
+                    ViewBag.MainTitle = txt.Layout.Terms;
+                    ViewBag.Subtitle = txt.CompanyName;
+                    ViewBag.HtmlContent = txt.PolicyContent.Terms;
+                    break;
+
+                default:
+                    return RedirectToAction(nameof(Index), new { visitorId });
             }
 
-            return View("InfoPage", model);
+            return View("InfoPage");
         }
 
         public IActionResult Contact(string visitorId)

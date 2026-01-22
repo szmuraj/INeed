@@ -131,29 +131,5 @@ namespace INeed.Helpers
 
             return false;
         }
-
-        /// <summary>
-        /// Fabryka modeli dla stron informacyjnych (Privacy/Terms).
-        /// </summary>
-        public static InfoPageVm? GetPageContent(string pageId)
-        {
-            var txt = Texts;
-            return pageId?.ToLower() switch
-            {
-                "privacy" => new InfoPageVm
-                {
-                    Title = txt.Layout.PrivacyPolicy,
-                    Subtitle = txt.Layout.CookieHeader,
-                    HtmlContent = txt.PolicyContent.PrivacyAndCookies
-                },
-                "terms" => new InfoPageVm
-                {
-                    Title = txt.Layout.Terms,
-                    Subtitle = txt.CompanyName,
-                    HtmlContent = txt.PolicyContent.Terms
-                },
-                _ => null
-            };
-        }
     }
 }
