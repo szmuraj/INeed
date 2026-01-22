@@ -20,7 +20,6 @@
     {
         public string Home { get; set; }
         public string Privacy { get; set; }
-
         public string Questionnaires { get; set; }
         public string Contact { get; set; }
         public string PrivacyPolicy { get; set; }
@@ -40,6 +39,9 @@
         public string Man { get; set; }
         public string Category { get; set; }
         public string ResultScore { get; set; }
+        public string GenderSelectionTitle { get; set; }
+        public string GenderSelectionInfo { get; set; }
+        public string DontSpecify { get; set; }
     }
 
     public class ButtonResources
@@ -107,8 +109,6 @@
         public string YourResults { get; set; }
         public string EmailSentSuccess { get; set; }
         public string EmailSentError { get; set; }
-
-        // POLA DLA RAPORTU ZBIORCZEGO
         public string CombinedResultsTitle { get; set; }
         public string ResultsForIdBody { get; set; }
         public string UnknownSurvey { get; set; }

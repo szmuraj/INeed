@@ -2,6 +2,8 @@
 @using System.Globalization
 @model INeed.Models.Form
 @{
+    var txt = AppConstants.Texts;
+
     var isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
     var title = (isEn && !string.IsNullOrEmpty(Model.TitleEN)) ? Model.TitleEN : Model.Title;
     ViewData[AppConstants.Keys.Title] = title;
@@ -9,7 +11,9 @@
     var descLong = (isEn && !string.IsNullOrEmpty(Model.DecryptionLongEN)) ? Model.DecryptionLongEN : Model.DecryptionLong;
     var descShort = (isEn && !string.IsNullOrEmpty(Model.DecryptionShortEN)) ? Model.DecryptionShortEN : Model.DecryptionShort;
     var finalDesc = !string.IsNullOrEmpty(descLong) ? descLong : descShort;
-    string visitorId = ViewBag.VisitorId as string ?? "000000";
+
+    // ZMIANA: Użycie stałej AppConstants.Defaults.VisitorId
+    string visitorId = ViewBag.VisitorId as string ?? AppConstants.Defaults.VisitorId;
 }
 
 <div class="container-fluid py-4">
@@ -17,40 +21,41 @@
         <div class="col-lg-10">
 
             <div class="d-flex justify-content-between align-items-start mb-5 w-100"
-                 style="color: #D9D9D9 !important; border-bottom: 1px solid rgba(217,217,217,0.1); padding-bottom: 20px;">
+                 style="color: @AppConstants.Colors.TextMain !important; border-bottom: 1px solid @AppConstants.Colors.BorderTransparent; padding-bottom: 20px;">
+
                 <div style="text-align: left !important; flex: 1;">
-                    <h2 class="fw-bold text-uppercase mb-2" style="color: #D9D9D9 !important; margin: 0;">@title</h2>
-                    <p class="lead mb-0" style="font-size: 1.05rem; opacity: 0.85; color: #D9D9D9 !important;">@finalDesc</p>
+                    <h2 class="fw-bold text-uppercase mb-2" style="color: @AppConstants.Colors.TextMain !important; margin: 0;">@title</h2>
+                    <p class="lead mb-0" style="font-size: 1.05rem; opacity: 0.85; color: @AppConstants.Colors.TextMain !important;">@finalDesc</p>
                 </div>
+
                 <div id="page-counter" class="text-end ps-4" style="min-width: 120px;">
-                    <div class="fw-bold" style="color: #76FF03 !important; font-size: 1.4rem; line-height: 1;">
+                    <div class="fw-bold" style="color: @AppConstants.Colors.TextHighlight !important; font-size: 1.4rem; line-height: 1;">
                         <span id="current-page">1</span> / <span id="total-pages">1</span>
                     </div>
-                    <small class="text-uppercase" style="color: #D9D9D9; font-size: 0.7rem; letter-spacing: 1px; opacity: 0.6;">@(isEn ? "Page" : "Strona")</small>
+                    <small class="text-uppercase" style="color: @AppConstants.Colors.TextMain; font-size: 0.7rem; letter-spacing: 1px; opacity: 0.6;">@txt.Fill.Page</small>
                 </div>
             </div>
 
             <form id="questionnaireForm" method="post" asp-action="Fill" asp-route-kw="@Model.Id" asp-route-id="@visitorId">
                 <input type="hidden" name="id" value="@visitorId" />
 
-                <div class="card mb-4 border-0 shadow-sm" style="border-radius: 10px; background-color: #f8f9fa;">
+                <div class="card mb-4 border-0 shadow-sm" style="border-radius: 10px; background-color: @AppConstants.Colors.BackgroundLight;">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-3 text-dark">@(isEn ? "Select your gender:" : "Wybierz swoją płeć:")</h5>
-                        <p class="text-muted small mb-3">@(isEn ? "This selection affects result norms." : "Wybór ma wpływ na normy. Wybierz 'Nie podaję', aby zobaczyć wyniki dla obu płci.")</p>
+                        <h5 class="fw-bold mb-3 text-dark">@txt.Labels.GenderSelectionTitle</h5>
+                        <p class="text-muted small mb-3">@txt.Labels.GenderSelectionInfo</p>
 
                         <div class="d-flex flex-wrap gap-4">
-                            @* ZMIANA: Value="false" dla Kobiety, "true" dla Mężczyzny, "" dla Null *@
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="isMale" id="genderF" value="false" style="transform: scale(1.2);">
-                                <label class="form-check-label fw-bold ms-1" for="genderF">@(isEn ? "Female" : "Kobieta")</label>
+                                <label class="form-check-label fw-bold ms-1" for="genderF">@txt.Labels.Woman</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="isMale" id="genderM" value="true" style="transform: scale(1.2);">
-                                <label class="form-check-label fw-bold ms-1" for="genderM">@(isEn ? "Male" : "Mężczyzna")</label>
+                                <label class="form-check-label fw-bold ms-1" for="genderM">@txt.Labels.Man</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="isMale" id="genderN" value="" checked style="transform: scale(1.2);">
-                                <label class="form-check-label fw-bold ms-1" for="genderN">@(isEn ? "Don't specify" : "Nie podaję")</label>
+                                <label class="form-check-label fw-bold ms-1" for="genderN">@txt.Labels.DontSpecify</label>
                             </div>
                         </div>
                     </div>
@@ -68,7 +73,8 @@
                                         @(isEn && !string.IsNullOrEmpty(question.QueryEN) ? question.QueryEN : question.Query)
                                     </h5>
 
-                                    <div class="d-flex flex-row flex-nowrap gap-2 justify-content-between answers-wrapper overflow-auto pb-2">
+                                    @* WERSJA DESKTOP *@
+                                    <div class="d-none d-md-flex flex-row flex-nowrap gap-2 justify-content-between answers-wrapper overflow-auto pb-2">
                                         @foreach (var answer in question.Answers.OrderBy(a => a.Order))
                                         {
                                             <div class="flex-grow-1">
@@ -81,20 +87,42 @@
                                             </div>
                                         }
                                     </div>
+
+                                    @* WERSJA MOBILE *@
+                                    <div class="d-md-none mt-2 position-relative">
+                                        <div class="input-group">
+                                            <select class="form-select shadow-sm p-3 text-dark mobile-select"
+                                                    name="Question_@question.QuestionId"
+                                                    style="border-radius: 10px 0 0 10px; border: 1px solid #dee2e6; height: auto;">
+                                                <option value="" selected disabled>@txt.Fill.SelectOption</option>
+                                                @foreach (var answer in question.Answers.OrderBy(a => a.Order))
+                                                {
+                                                    <option value="@answer.AnswerId">
+                                                        @(isEn && !string.IsNullOrEmpty(answer.ReplyEN) ? answer.ReplyEN : answer.Reply)
+                                                    </option>
+                                                }
+                                            </select>
+                                            <span class="input-group-text bg-white border-start-0"
+                                                  style="border-radius: 0 10px 10px 0; border: 1px solid #dee2e6;">
+                                                <i class="bi bi-exclamation-circle-fill text-danger status-icon fs-4"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         }
                     </div>
 
                     <div class="mt-5 d-flex gap-3">
-                        <button type="button" id="btn-prev" class="btn btn-secondary fw-bold py-3 shadow-sm" style="border-radius: 10px; font-size: 1.1rem; display: none; width: 150px;">&larr; @(isEn ? "Back" : AppConstants.Texts.Buttons.Back)</button>
-                        <button type="button" id="btn-next" class="btn fw-bold py-3 shadow-sm flex-grow-1" style="background-color: @AppConstants.Colors.ButtonAction; color: @AppConstants.Colors.Black; border: none; border-radius: 10px; font-size: 1.1rem;">@(isEn ? "Continue" : AppConstants.Texts.Buttons.Continue) &rarr;</button>
-                        <button type="submit" id="btn-submit" class="btn fw-bold py-3 shadow-sm flex-grow-1" style="background-color: @AppConstants.Colors.ButtonSubmit; color: @AppConstants.Colors.Black; border-radius: 10px; font-size: 1.1rem; display: none;">@(isEn ? "Send Answers" : AppConstants.Texts.Buttons.SendAnswers) &rarr;</button>
+                        <button type="button" id="btn-prev" class="btn btn-secondary fw-bold py-3 shadow-sm" style="border-radius: 10px; font-size: 1.1rem; display: none; width: 150px;">&larr; @txt.Buttons.Back</button>
+                        <button type="button" id="btn-next" class="btn fw-bold py-3 shadow-sm flex-grow-1" style="background-color: @AppConstants.Colors.ButtonAction; color: @AppConstants.Colors.Black; border: none; border-radius: 10px; font-size: 1.1rem;">@txt.Buttons.Continue &rarr;</button>
+                        <button type="submit" id="btn-submit" class="btn fw-bold py-3 shadow-sm flex-grow-1" style="background-color: @AppConstants.Colors.ButtonSubmit; color: @AppConstants.Colors.Black; border-radius: 10px; font-size: 1.1rem; display: none;">@txt.Buttons.SendAnswers &rarr;</button>
                     </div>
                 }
                 else
                 {
-                    <div class="alert alert-warning">@(isEn ? "No questions available." : AppConstants.Texts.Fill.NoQuestions)</div>
+                    <div class="alert alert-warning">@txt.Fill.NoQuestions</div>
                 }
             </form>
         </div>
@@ -102,7 +130,6 @@
 </div>
 
 @section Scripts {
-    @* Skrypt JS pozostaje ten sam *@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const inputs = document.querySelectorAll('.btn-check');
@@ -111,6 +138,38 @@
                     const wrapper = this.closest('.answers-wrapper');
                     if (wrapper) wrapper.classList.add('answered');
                 });
+            });
+
+            const selects = document.querySelectorAll('select.mobile-select');
+            selects.forEach(select => {
+                const updateStyle = () => {
+                    const container = select.closest('.input-group');
+                    const icon = container.querySelector('.status-icon');
+                    const addon = container.querySelector('.input-group-text');
+
+                    if (select.value) {
+                        select.style.borderColor = '@AppConstants.Colors.ActiveNav';
+                        select.style.borderWidth = '2px';
+                        select.style.backgroundColor = '#f0f8ff';
+                        select.classList.add('fw-bold');
+                        addon.style.borderColor = '@AppConstants.Colors.ActiveNav';
+                        addon.style.borderWidth = '2px';
+                        addon.style.borderLeft = '0';
+                        icon.className = 'bi bi-check-circle-fill status-icon fs-4';
+                        icon.style.color = '@AppConstants.Colors.ActiveNav';
+                    } else {
+                        select.style.borderColor = '#dee2e6';
+                        select.style.borderWidth = '1px';
+                        select.style.backgroundColor = '#fff';
+                        select.classList.remove('fw-bold');
+                        addon.style.borderColor = '#dee2e6';
+                        addon.style.borderWidth = '1px';
+                        icon.className = 'bi bi-exclamation-circle-fill text-danger status-icon fs-4';
+                        icon.style.color = '';
+                    }
+                };
+                select.addEventListener('change', updateStyle);
+                updateStyle();
             });
 
             const questions = document.querySelectorAll('.question-card');
@@ -131,8 +190,14 @@
                 const end = start + itemsPerPage;
                 for (let i = start; i < end; i++) {
                     if (questions[i]) {
-                        const checked = questions[i].querySelector('input[type="radio"]:checked');
-                        if (!checked) return false;
+                        const select = questions[i].querySelector('select');
+                        if (select && select.offsetParent !== null) {
+                            if (!select.value) return false;
+                        }
+                        else {
+                            const checked = questions[i].querySelector('input[type="radio"]:checked');
+                            if (!checked) return false;
+                        }
                     }
                 }
                 return true;
@@ -162,7 +227,7 @@
                 if (validatePage(currentPage)) {
                     if (currentPage < totalPages) { currentPage++; showPage(currentPage); }
                 } else {
-                    alert("@(isEn ? "Please answer all questions on this page." : AppConstants.Texts.Fill.AlertPage)");
+                    alert(@Json.Serialize(txt.Fill.AlertPage));
                 }
             });
 
@@ -175,8 +240,15 @@
                 form.addEventListener('submit', function(e) {
                     if (!validatePage(currentPage)) {
                         e.preventDefault();
-                        alert("@(isEn ? "Please answer all questions before sending." : AppConstants.Texts.Fill.AlertAll)");
+                        alert(@Json.Serialize(txt.Fill.AlertAll));
+                        return;
                     }
+                    document.querySelectorAll('select[name^="Question_"]').forEach(el => {
+                        if (el.offsetParent === null) el.disabled = true;
+                    });
+                    document.querySelectorAll('input[type="radio"][name^="Question_"]').forEach(el => {
+                        if (el.offsetParent === null) el.disabled = true;
+                    });
                 });
             }
 
@@ -188,7 +260,6 @@
 <style>
     .btn-check:checked + .btn {
         box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.5) !important;
-        /* ZMIANA: Usunięto transform: scale(1.05); aby przycisk nie zmieniał rozmiaru */
         z-index: 10;
         border-color: @AppConstants.Colors.Black !important;
         filter: brightness(110%);

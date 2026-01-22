@@ -25,8 +25,12 @@ namespace INeed.Controllers
         }
 
         [HttpGet(AppConstants.FillRoute)]
-        public async Task<IActionResult> Fill(int kw, string visitorId = "000000")
+        // ZMIANA: Usunięto = "000000" z sygnatury
+        public async Task<IActionResult> Fill(int kw, string visitorId)
         {
+            // ZMIANA: Logika przeniesiona do środka
+            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
+
             if (kw == 0) return NotFound();
 
             var form = await _context.Forms
@@ -44,7 +48,8 @@ namespace INeed.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Fill(int kw, string visitorId, bool? isMale, IFormCollection collection)
         {
-            if (string.IsNullOrEmpty(visitorId)) visitorId = "000000";
+            // ZMIANA: Użycie stałej AppConstants.Defaults.VisitorId
+            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
 
             var questionnaire = await _context.Forms
                 .Include(f => f.Questions).ThenInclude(q => q.Answers)
@@ -175,13 +180,11 @@ namespace INeed.Controllers
         {
             if (string.IsNullOrEmpty(email)) return RedirectToAction("Index", "Home");
 
-            // --- ZMIANA: Pobieramy zasoby dynamicznie ---
             var txt = AppConstants.Texts;
 
             string rows = "";
             foreach (var cat in model.Categories)
             {
-                // --- ZMIANA: Używamy dynamicznych etykiet Woman/Man ---
                 string adviceText = model.IsMale == null
                     ? $"{txt.Labels.Woman}: {cat.AdviceFemale} <br> {txt.Labels.Man}: {cat.AdviceMale}"
                     : cat.Advice;

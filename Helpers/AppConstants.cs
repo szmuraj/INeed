@@ -10,6 +10,12 @@ namespace INeed.Helpers
 
         public const string FillRoute = "Fill";
 
+        // NOWA KLASA: WARTOŚCI DOMYŚLNE
+        public static class Defaults
+        {
+            public const string VisitorId = "000000";
+        }
+
         public static class Keys
         {
             public const string SuccessMessage = "SuccessMessage";
@@ -30,7 +36,7 @@ namespace INeed.Helpers
             public const string BackgroundLight = "#f8f9fa";
             public const string ButtonAction = "#ffc107";
 
-            // ActiveNav: Turkusowy (zgodnie z Twoim życzeniem)
+            // ActiveNav: Turkusowy
             public const string ActiveNav = "#26A69A";
 
             // ButtonSubmit: Limonkowy
@@ -41,6 +47,11 @@ namespace INeed.Helpers
             public const string Black = "#000000";
             public const string White = "#ffffff";
             public const string TextSecondary = "#6c757d";
+
+            // Nowe kolory (nagłówek ankiety)
+            public const string TextMain = "#D9D9D9";
+            public const string TextHighlight = "#76FF03";
+            public const string BorderTransparent = "rgba(217,217,217,0.1)";
 
             // Kolory kategorii
             public const string Achievement = "#76FF03";
@@ -58,6 +69,7 @@ namespace INeed.Helpers
             public const string ActionFill = "Fill";
             public const string ActionContact = "Contact";
             public const string ActionSetCulture = "SetCulture";
+            public const string ActionInfo = "Info";
         }
 
         public static class Assets

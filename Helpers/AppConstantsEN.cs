@@ -11,6 +11,8 @@
 
                 Layout = new LayoutResources
                 {
+                    Home = "Home",
+                    Privacy = "Privacy",
                     Questionnaires = "Questionnaires",
                     Contact = "Contact",
                     PrivacyPolicy = "Privacy Policy",
@@ -27,7 +29,12 @@
                     EmailPlaceholder = "Email address",
                     FirstName = "First Name",
                     Woman = "Woman",
-                    Man = "Man"
+                    Man = "Man",
+                    Category = "Category",
+                    ResultScore = "Score",
+                    GenderSelectionTitle = "Select your gender:",
+                    GenderSelectionInfo = "This selection affects result norms.",
+                    DontSpecify = "Don't specify"
                 },
 
                 Buttons = new ButtonResources
@@ -42,7 +49,6 @@
                     Start = "Start"
                 },
 
-                // --- TRANSLATED LEGAL CONTENT ---
                 PolicyContent = new PolicyContentResources
                 {
                     PrivacyAndCookies = @"
@@ -57,7 +63,7 @@
                         <p><strong>2. Purposes and legal basis of processing</strong><br>
                         Data is processed for the purpose of:
                         <ul>
-                            <li>Providing electronic services (e.g., sending survey results) – Art. 6(1)(b) GDPR.</li>
+                            <li>Providing services electronically (e.g., sending survey results) – Art. 6(1)(b) GDPR.</li>
                             <li>Communication with Users (responding to inquiries) – Art. 6(1)(f) GDPR.</li>
                             <li>Marketing (Newsletter) – Art. 6(1)(a) GDPR (consent).</li>
                             <li>Analytics and service security – Art. 6(1)(f) GDPR.</li>
@@ -130,7 +136,7 @@
                     PageTitle = "Questionnaire",
                     Step = "Question",
                     Of = "of",
-                    SelectOption = "Select an option:",
+                    SelectOption = "Select an option:", // Dla listy rozwijanej
                     Page = "Page",
                     NoQuestions = "No questions available.",
                     AlertPage = "Please answer all questions on this page.",

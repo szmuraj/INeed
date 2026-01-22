@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using INeed.Data;
 using INeed.Models;
+using INeed.Models.ViewModels;
 using INeed.Services;
 using INeed.Helpers;
 using System.Diagnostics;
-using System.Text; // Potrzebne do StringBuilder
+using System.Text;
 
 namespace INeed.Controllers
 {
@@ -20,8 +21,9 @@ namespace INeed.Controllers
             _emailService = emailService;
         }
 
-        public async Task<IActionResult> Index(string visitorId = "000000")
+        public async Task<IActionResult> Index(string visitorId)
         {
+            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
             ViewBag.VisitorId = visitorId;
 
             var forms = _context.Forms != null
@@ -31,28 +33,51 @@ namespace INeed.Controllers
             return View(forms);
         }
 
-        public IActionResult Privacy(string visitorId = "000000")
+        // ZMIANA: Jedna uniwersalna metoda obs³uguj¹ca strony informacyjne
+        // Wywo³anie: /Home/Info/privacy lub /Home/Info/terms
+        public IActionResult Info(string id, string visitorId)
         {
+            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
             ViewBag.VisitorId = visitorId;
-            return View();
+
+            var txt = AppConstants.Texts;
+            var model = new InfoPageVm();
+
+            switch (id?.ToLower())
+            {
+                case "privacy":
+                    model.Title = txt.Layout.PrivacyPolicy;
+                    model.Subtitle = txt.Layout.CookieHeader;
+                    model.HtmlContent = txt.PolicyContent.PrivacyAndCookies;
+                    break;
+
+                case "terms":
+                    model.Title = txt.Layout.Terms;
+                    model.Subtitle = txt.CompanyName;
+                    model.HtmlContent = txt.PolicyContent.Terms;
+                    break;
+
+                default:
+                    // Jeœli podano nieznany ID (np. /Home/Info/xyz), wróæ na g³ówn¹
+                    return RedirectToAction(nameof(Index), new { visitorId });
+            }
+
+            return View("InfoPage", model);
         }
 
-        public IActionResult Terms(string visitorId = "000000")
+        public IActionResult Contact(string visitorId)
         {
-            ViewBag.VisitorId = visitorId;
-            return View();
-        }
-
-        public IActionResult Contact(string visitorId = "000000")
-        {
+            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
             ViewBag.VisitorId = visitorId;
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendMessage(string email, string message, bool rodoConsent, string visitorId = "000000")
+        public async Task<IActionResult> SendMessage(string email, string message, bool rodoConsent, string visitorId)
         {
+            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
+
             if (!rodoConsent)
             {
                 TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.RodoRequired;
@@ -79,53 +104,50 @@ namespace INeed.Controllers
             return RedirectToAction(AppConstants.Routing.ActionContact, new { visitorId });
         }
 
-        // --- NOWA METODA: WYSY£ANIE ZBIORCZYCH WYNIKÓW ---
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendAllResults(string email, string visitorId)
         {
-            // Zabezpieczenie visitorId
-            if (string.IsNullOrEmpty(visitorId)) visitorId = "000000";
+            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
 
             if (string.IsNullOrEmpty(email))
             {
-                TempData[AppConstants.Keys.ContactError] = "Proszê podaæ adres e-mail.";
+                TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.EmailRequired;
                 return RedirectToAction(AppConstants.Routing.ActionContact, new { visitorId });
             }
 
-            // Pobranie wszystkich wyników dla danego u¿ytkownika wraz z relacjami
             var results = await _context.VisitorResults
                 .Include(r => r.Form)
                 .Include(r => r.CategoryScores).ThenInclude(cs => cs.Category)
                 .Where(r => r.VisitorId == visitorId)
-                .OrderByDescending(r => r.Date) // Najnowsze na górze
+                .OrderByDescending(r => r.Date)
                 .ToListAsync();
 
             if (!results.Any())
             {
-                TempData[AppConstants.Keys.ContactError] = "Nie znaleziono ¿adnych wyników dla Twojego identyfikatora.";
+                TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.NoResultsFound;
                 return RedirectToAction(AppConstants.Routing.ActionContact, new { visitorId });
             }
 
-            // Budowanie treœci maila
+            var txt = AppConstants.Texts;
             var sb = new StringBuilder();
             sb.Append($"<div style='font-family: Arial, sans-serif; padding: 20px;'>");
-            sb.Append($"<h2 style='color: {AppConstants.Colors.Primary};'>Twoje zbiorcze wyniki</h2>");
-            sb.Append($"<p>Poni¿ej znajduj¹ siê wszystkie wyniki ankiet powi¹zane z identyfikatorem: <strong>{visitorId}</strong></p>");
+            sb.Append($"<h2 style='color: {AppConstants.Colors.Primary};'>{txt.Messages.CombinedResultsTitle}</h2>");
+            sb.Append($"<p>{txt.Messages.ResultsForIdBody}: <strong>{visitorId}</strong></p>");
             sb.Append("<hr>");
 
             foreach (var result in results)
             {
                 sb.Append($"<div style='margin-bottom: 30px; border: 1px solid #eee; padding: 15px; border-radius: 8px;'>");
-                sb.Append($"<h3 style='margin-top: 0;'>{result.Form?.Title ?? "Nieznana ankieta"}</h3>");
-                sb.Append($"<p style='color: #666; font-size: 0.9em;'>Data wype³nienia: {result.Date:yyyy-MM-dd HH:mm}</p>");
+                sb.Append($"<h3 style='margin-top: 0;'>{result.Form?.Title ?? txt.Messages.UnknownSurvey}</h3>");
+                sb.Append($"<p style='color: #666; font-size: 0.9em;'>{txt.Messages.FillDate}: {result.Date:yyyy-MM-dd HH:mm}</p>");
 
                 sb.Append("<table style='width: 100%; border-collapse: collapse;'>");
                 foreach (var score in result.CategoryScores)
                 {
                     sb.Append("<tr>");
-                    sb.Append($"<td style='padding: 5px; border-bottom: 1px solid #f0f0f0;'><strong>{score.Category?.Name ?? "Kategoria"}</strong></td>");
-                    sb.Append($"<td style='padding: 5px; border-bottom: 1px solid #f0f0f0; text-align: right;'>Wynik: {score.Score}</td>");
+                    sb.Append($"<td style='padding: 5px; border-bottom: 1px solid #f0f0f0;'><strong>{score.Category?.Name ?? txt.Labels.Category}</strong></td>");
+                    sb.Append($"<td style='padding: 5px; border-bottom: 1px solid #f0f0f0; text-align: right;'>{txt.Labels.ResultScore}: {score.Score}</td>");
                     sb.Append("</tr>");
                 }
                 sb.Append("</table>");
@@ -135,8 +157,8 @@ namespace INeed.Controllers
 
             try
             {
-                await _emailService.SendEmailAsync(email, "Twoje zbiorcze wyniki - INeed", sb.ToString());
-                TempData[AppConstants.Keys.ContactSuccess] = "Wszystkie wyniki zosta³y wys³ane na podany adres e-mail.";
+                await _emailService.SendEmailAsync(email, $"{txt.Messages.CombinedResultsTitle} - INeed", sb.ToString());
+                TempData[AppConstants.Keys.ContactSuccess] = txt.Messages.AllResultsSentSuccess;
             }
             catch
             {
@@ -150,7 +172,7 @@ namespace INeed.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteData(string visitorId)
         {
-            if (string.IsNullOrEmpty(visitorId)) visitorId = "000000";
+            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
 
             var results = await _context.VisitorResults
                 .Where(r => r.VisitorId == visitorId)
@@ -160,11 +182,11 @@ namespace INeed.Controllers
             {
                 _context.VisitorResults.RemoveRange(results);
                 await _context.SaveChangesAsync();
-                TempData[AppConstants.Keys.ContactSuccess] = "Wszystkie dane powi¹zane z Twoim ID zosta³y usuniête.";
+                TempData[AppConstants.Keys.ContactSuccess] = AppConstants.Texts.Messages.DataDeleted;
             }
             else
             {
-                TempData[AppConstants.Keys.ContactError] = "Nie znaleziono danych dla tego identyfikatora.";
+                TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.NoResultsFound;
             }
 
             return RedirectToAction(AppConstants.Routing.ActionContact, new { visitorId });

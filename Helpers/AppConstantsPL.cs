@@ -11,6 +11,8 @@
 
                 Layout = new LayoutResources
                 {
+                    Home = "Strona główna",
+                    Privacy = "Prywatność",
                     Questionnaires = "Ankiety",
                     Contact = "Kontakt",
                     PrivacyPolicy = "Polityka Prywatności",
@@ -27,7 +29,12 @@
                     EmailPlaceholder = "Adres e-mail",
                     FirstName = "Imię",
                     Woman = "Kobieta",
-                    Man = "Mężczyzna"
+                    Man = "Mężczyzna",
+                    Category = "Kategoria",
+                    ResultScore = "Wynik",
+                    GenderSelectionTitle = "Wybierz swoją płeć:",
+                    GenderSelectionInfo = "Wybór ma wpływ na normy. Wybierz 'Nie podaję', aby zobaczyć wyniki dla obu płci.",
+                    DontSpecify = "Nie podaję"
                 },
 
                 Buttons = new ButtonResources
@@ -42,7 +49,6 @@
                     Start = "Rozpocznij"
                 },
 
-                // --- TREŚCI PRAWNE (ZAKTUALIZOWANE) ---
                 PolicyContent = new PolicyContentResources
                 {
                     PrivacyAndCookies = @"

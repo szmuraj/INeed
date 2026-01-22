@@ -16,7 +16,7 @@ namespace INeed.Controllers
                     new CookieOptions
                     {
                         Expires = DateTimeOffset.UtcNow.AddYears(1),
-                        IsEssential = true, // <--- TO JEST KLUCZOWE! Bez tego RODO blokuje ciasteczko.
+                        IsEssential = true,
                         SameSite = SameSiteMode.Strict
                     }
                 );
