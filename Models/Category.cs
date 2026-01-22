@@ -9,16 +9,24 @@ namespace INeed.Models
         public Guid Id { get; set; }
 
         [Required]
+        [Display(Name = "Nazwa kategorii")]
         public string Name { get; set; }
+
+        [Display(Name = "Nazwa kategorii (EN)")]
         public string? NameEN { get; set; }
 
+        [Display(Name = "Kod")]
         public string Code { get; set; }
 
         [StringLength(10)]
+        [Display(Name = "Kolor (HEX)")]
         public string Color { get; set; }
 
         // Normy (ciągi liczb oddzielone przecinkami)
+        [Display(Name = "Normy (Kobiety)")]
         public string StenNormsFemale { get; set; }
+
+        [Display(Name = "Normy (Mężczyźni)")]
         public string StenNormsMale { get; set; }
 
         // --- BRAKUJĄCE POLA (DORADZTWO) ---

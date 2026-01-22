@@ -22,20 +22,17 @@ namespace INeed.Controllers
 
         public async Task<IActionResult> Index(string visitorId)
         {
-            // 1. Pobieramy lub ustawiamy domyœlne ID
             visitorId = AppConstants.GetVisitorId(visitorId);
             ViewBag.VisitorId = visitorId;
 
-            // 2. Pobieramy ankiety z bazy (TO BY£O POMINIÊTE)
             var forms = _context.Forms != null
                 ? await _context.Forms.Where(f => f.IsActive).ToListAsync()
                 : new List<Form>();
 
-            // 3. Przekazujemy je do widoku
             return View(forms);
         }
 
-        // Metoda Info zastêpuj¹ca Privacy i Terms (bez InfoPageVm)
+        // DRY: Jedna metoda obs³uguj¹ca strony informacyjne
         public IActionResult Info(string id, string visitorId)
         {
             visitorId = AppConstants.GetVisitorId(visitorId);

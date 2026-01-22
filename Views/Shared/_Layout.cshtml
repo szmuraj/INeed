@@ -3,7 +3,6 @@
 @inject ApplicationDbContext _context
 
 @{
-    // DRY: Użycie helpera GetVisitorId
     var currentVisitorId = AppConstants.GetVisitorId(ViewBag.VisitorId as string ?? Context.Request.Query["visitorId"].ToString());
 
     string GetButtonColor(string controller, string action, string? formId = null)

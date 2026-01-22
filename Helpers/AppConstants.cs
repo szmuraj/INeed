@@ -1,15 +1,11 @@
 ﻿using System.Globalization;
 using INeed.Models;
-using INeed.Models.ViewModels;
 
 namespace INeed.Helpers
 {
     public static class AppConstants
     {
-        // =========================================================
-        // 1. STAŁE TECHNICZNE (Klucze, Kolory, Routing, Ścieżki)
-        // =========================================================
-
+        // ... (Defaults, Keys, Routing, Assets - BEZ ZMIAN) ...
         public const string FillRoute = "Fill";
 
         public static class Defaults
@@ -28,28 +24,18 @@ namespace INeed.Helpers
 
         public static class Colors
         {
-            // Primary (Tło paska bocznego): Ciemny granat
             public const string Primary = "#1A2D41";
-
-            // Accent (Elementy dekoracyjne): Niebieski
             public const string Accent = "#1565C0";
-
             public const string BackgroundLight = "#f8f9fa";
             public const string ButtonAction = "#ffc107";
-
-            // ActiveNav: Turkusowy
             public const string ActiveNav = "#26A69A";
-
-            // ButtonSubmit: Limonkowy
             public const string ButtonSubmit = "#76FF03";
-
             public const string ButtonDanger = "#dc3545";
-
             public const string Black = "#000000";
             public const string White = "#ffffff";
             public const string TextSecondary = "#6c757d";
 
-            // Kolory nagłówka ankiety
+            // Kolory nagłówka
             public const string TextMain = "#D9D9D9";
             public const string TextHighlight = "#76FF03";
             public const string BorderTransparent = "rgba(217,217,217,0.1)";
@@ -57,12 +43,6 @@ namespace INeed.Helpers
             // Kolory inputów (JS)
             public const string InputBackgroundActive = "#f0f8ff";
             public const string BorderDefault = "#dee2e6";
-
-            // Kolory kategorii
-            public const string Achievement = "#76FF03";
-            public const string Affiliation = "#26A69A";
-            public const string Autonomy = "#FFF700";
-            public const string Dominance = "#D32F2F";
         }
 
         public static class Routing
@@ -84,19 +64,14 @@ namespace INeed.Helpers
         }
 
         // =========================================================
-        // 2. MECHANIZM TŁUMACZEŃ
+        // MECHANIZM TŁUMACZEŃ I HELPERY
         // =========================================================
 
         private static bool IsEn => CultureInfo.CurrentUICulture.Name.StartsWith("en");
-
         public static TextResources Texts => IsEn ? AppConstantsEN.Get() : AppConstantsPL.Get();
 
-        // =========================================================
-        // 3. METODY POMOCNICZE (DRY & SCALABILITY)
-        // =========================================================
-
         /// <summary>
-        /// Zwraca podany identyfikator lub domyślny ("000000") jeśli podany jest pusty/null.
+        /// DRY: Zwraca podany identyfikator lub domyślny ("000000").
         /// </summary>
         public static string GetVisitorId(string? visitorId)
         {
@@ -104,31 +79,23 @@ namespace INeed.Helpers
         }
 
         /// <summary>
-        /// Wybiera treść w zależności od języka (PL/EN).
+        /// SKALOWALNOŚĆ: Wybiera treść w zależności od języka.
         /// </summary>
         public static string SelectContent(string defaultContent, string? enContent)
         {
-            if (IsEn && !string.IsNullOrEmpty(enContent))
-            {
-                return enContent;
-            }
+            if (IsEn && !string.IsNullOrEmpty(enContent)) return enContent;
             return defaultContent;
         }
 
         /// <summary>
-        /// Sprawdza dopasowanie kategorii w wielu językach.
+        /// SKALOWALNOŚĆ: Sprawdza dopasowanie kategorii.
         /// </summary>
         public static bool IsCategoryMatch(Category cat, string key)
         {
             if (cat == null || string.IsNullOrWhiteSpace(key)) return false;
             var k = key.Trim();
-
-            // Sprawdź PL (Default)
             if (cat.Name.Trim().Equals(k, StringComparison.OrdinalIgnoreCase)) return true;
-
-            // Sprawdź EN
             if (cat.NameEN != null && cat.NameEN.Trim().Equals(k, StringComparison.OrdinalIgnoreCase)) return true;
-
             return false;
         }
     }

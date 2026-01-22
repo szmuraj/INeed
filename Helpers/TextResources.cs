@@ -57,6 +57,7 @@
         public string SendAnswers { get; set; }
         public string SendResults { get; set; }
         public string Start { get; set; }
+        public string RetakeTest { get; set; }
     }
 
     public class PolicyContentResources
@@ -78,6 +79,9 @@
         public string RodoConsent { get; set; }
         public string FormUnsubscribeHeader { get; set; }
         public string ModalTitle { get; set; }
+        public string ResultsHeader { get; set; }
+        public string ResultsSubHeader { get; set; }
+        public string DeleteIdLabel { get; set; }
     }
 
     public class FillResources
@@ -119,6 +123,7 @@
         public string NoResultsFound { get; set; }
         public string EmailRequired { get; set; }
         public string AllResultsSentSuccess { get; set; }
+        public string NoData { get; set; }
     }
 
     public class ResultResources
@@ -131,6 +136,9 @@
         public string RodoConsent { get; set; }
         public string And { get; set; }
         public string AcceptTerms { get; set; }
+        public string NormsFemale { get; set; }   // NOWE
+        public string NormsMale { get; set; }     // NOWE
+        public string YourResultSten { get; set; }
     }
 
     public class HomeResources

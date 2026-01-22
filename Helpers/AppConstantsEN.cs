@@ -49,7 +49,8 @@
                     Continue = "Next",
                     SendAnswers = "Finish and see results",
                     SendResults = "Send results via email",
-                    Start = "Start"
+                    Start = "Start",
+                    RetakeTest = "Retake Test"
                 },
 
                 PolicyContent = new PolicyContentResources
@@ -131,7 +132,10 @@
                     FormContactHeader = "Contact Form",
                     RodoConsent = "I consent to data processing.",
                     FormUnsubscribeHeader = "I want to delete my data",
-                    ModalTitle = "Are you sure you want to delete your data?"
+                    ModalTitle = "Are you sure you want to delete your data?",
+                    ResultsHeader = "Download your results",
+                    ResultsSubHeader = "Send all results associated with your ID to your email.",
+                    DeleteIdLabel = "Data ID to delete:"
                 },
 
                 Fill = new FillResources
@@ -172,7 +176,8 @@
                     FillDate = "Date filled",
                     NoResultsFound = "No results found for your identifier.",
                     EmailRequired = "Please provide an email address.",
-                    AllResultsSentSuccess = "All results have been sent to the provided email address."
+                    AllResultsSentSuccess = "All results have been sent to the provided email address.",
+                    NoData = "No data available."
                 },
 
                 Result = new ResultResources
@@ -184,7 +189,10 @@
                     SaveSubHeader = "Enter your email address to receive a permanent copy of the results and interpretation.",
                     RodoConsent = "I accept the",
                     And = "and",
-                    AcceptTerms = ", and I agree to data processing for sending the result."
+                    AcceptTerms = ", and I agree to data processing for sending the result.",
+                    NormsFemale = "Female Norms",
+                    NormsMale = "Male Norms",
+                    YourResultSten = "Your Result (STEN)"
                 },
 
                 Home = new HomeResources

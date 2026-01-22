@@ -49,7 +49,8 @@
                     Continue = "Dalej",
                     SendAnswers = "Zakończ i pokaż wynik",
                     SendResults = "Wyślij wynik na e-mail",
-                    Start = "Rozpocznij"
+                    Start = "Rozpocznij",
+                    RetakeTest = "Wypełnij ponownie"
                 },
 
                 PolicyContent = new PolicyContentResources
@@ -131,7 +132,10 @@
                     FormContactHeader = "Formularz kontaktowy",
                     RodoConsent = "Wyrażam zgodę na przetwarzanie danych.",
                     FormUnsubscribeHeader = "Chcę usunąć swoje dane",
-                    ModalTitle = "Czy na pewno chcesz usunąć swoje dane?"
+                    ModalTitle = "Czy na pewno chcesz usunąć swoje dane?",
+                    ResultsHeader = "Pobierz swoje wyniki",
+                    ResultsSubHeader = "Wyślij wszystkie wyniki powiązane z Twoim identyfikatorem na e-mail.",
+                    DeleteIdLabel = "Identyfikator danych do usunięcia:"
                 },
 
                 Fill = new FillResources
@@ -172,7 +176,8 @@
                     FillDate = "Data wypełnienia",
                     NoResultsFound = "Nie znaleziono żadnych wyników dla Twojego identyfikatora.",
                     EmailRequired = "Proszę podać adres e-mail.",
-                    AllResultsSentSuccess = "Wszystkie wyniki zostały wysłane na podany adres e-mail."
+                    AllResultsSentSuccess = "Wszystkie wyniki zostały wysłane na podany adres e-mail.",
+                    NoData = "Brak danych do wyświetlenia."
                 },
 
                 Result = new ResultResources
@@ -184,7 +189,10 @@
                     SaveSubHeader = "Podaj adres e-mail, aby otrzymać trwałą kopię wyników oraz interpretację.",
                     RodoConsent = "Akceptuję",
                     And = "oraz",
-                    AcceptTerms = ", a także zgadzam się na przetwarzanie danych w celu wysyłki wyniku."
+                    AcceptTerms = ", a także zgadzam się na przetwarzanie danych w celu wysyłki wyniku.",
+                    NormsFemale = "Normy dla Kobiet",
+                    NormsMale = "Normy dla Mężczyzn",
+                    YourResultSten = "Twój wynik (STEN)"
                 },
 
                 Home = new HomeResources

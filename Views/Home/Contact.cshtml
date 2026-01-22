@@ -1,8 +1,9 @@
 ﻿@using INeed.Helpers
 @{
     ViewData[AppConstants.Keys.Title] = AppConstants.Texts.Contact.PageTitle;
-    // Pobranie ID przekazanego z kontrolera
-    var visitorId = ViewBag.VisitorId as string ?? "000000";
+
+    // DRY: Użycie helpera do pobrania VisitorId
+    var visitorId = AppConstants.GetVisitorId(ViewBag.VisitorId as string);
 }
 
 <div class="d-flex flex-column h-100">
@@ -20,8 +21,8 @@
         <div class="col-lg-6 mx-auto mb-4"><div class="alert alert-danger border-0 shadow-sm" style="border-radius: 10px;">@TempData[AppConstants.Keys.ContactError]</div></div>
     }
 
-
     <div class="col-lg-6 mx-auto d-flex flex-column gap-4">
+
         @* 1. DANE FIRMY *@
         <div class="p-4 border border-secondary border-opacity-25 shadow-sm" style="background-color: @AppConstants.Colors.BackgroundLight; border-radius: 15px;">
             <div class="d-flex align-items-center gap-4">
@@ -63,23 +64,22 @@
             </form>
         </div>
 
-        @* 3. NOWA SEKCJA: WYSYŁANIE WYNIKÓW *@
+        @* 3. WYSYŁANIE WYNIKÓW *@
         <div class="p-4 border border-secondary border-opacity-25 shadow-sm" style="background-color: @AppConstants.Colors.BackgroundLight; border-radius: 15px;">
-            <h5 class="fw-bold mb-3 text-dark text-center">Pobierz swoje wyniki</h5>
-            <p class="text-muted text-center small mb-3">Wyślij wszystkie wyniki powiązane z Twoim identyfikatorem na e-mail.</p>
+            @* SŁOWNIK: Użycie nowych kluczy *@
+            <h5 class="fw-bold mb-3 text-dark text-center">@AppConstants.Texts.Contact.ResultsHeader</h5>
+            <p class="text-muted text-center small mb-3">@AppConstants.Texts.Contact.ResultsSubHeader</p>
 
             <form asp-action="SendAllResults" asp-controller="Home" method="post" class="d-flex flex-column align-items-center">
-
-                @* ID pobierane z URL/ViewBag *@
                 <input type="hidden" name="visitorId" value="@visitorId" />
 
                 <div class="mb-3 w-75">
-                    @* Użytkownik wpisuje e-mail *@
                     <input type="email" name="email" class="form-control bg-white text-dark border-secondary border-opacity-25" placeholder="@AppConstants.Texts.Labels.YourEmailPlaceholder" required>
                 </div>
 
                 <button type="submit" class="btn w-auto px-4 fw-bold py-2 shadow-sm" style="background-color: @AppConstants.Colors.ButtonAction; color: @AppConstants.Colors.Black; border: none; border-radius: 10px;">
-                    Wyślij wyniki
+                    @* SŁOWNIK: Reużycie przycisku "SendResults" *@
+                    @AppConstants.Texts.Buttons.SendResults
                 </button>
             </form>
         </div>
@@ -89,11 +89,11 @@
             <h5 class="fw-bold mb-3 text-dark text-center">@AppConstants.Texts.Contact.FormUnsubscribeHeader</h5>
 
             <form id="deleteDataForm" asp-action="DeleteData" asp-controller="Home" method="post" class="d-flex flex-column align-items-center">
-
                 <input type="hidden" name="visitorId" value="@visitorId" />
 
                 <div class="mb-3 text-center text-muted">
-                    <small>Identyfikator danych do usunięcia:<br><strong>@visitorId</strong></small>
+                    @* SŁOWNIK: Użycie nowego klucza *@
+                    <small>@AppConstants.Texts.Contact.DeleteIdLabel<br><strong>@visitorId</strong></small>
                 </div>
 
                 <button type="button" class="btn w-auto px-4 fw-bold py-2" style="background-color: @AppConstants.Colors.ButtonDanger; color: @AppConstants.Colors.Black; border: none; border-radius: 10px;" data-bs-toggle="modal" data-bs-target="#confirmModal">
