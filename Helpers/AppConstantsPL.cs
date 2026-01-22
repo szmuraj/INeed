@@ -131,7 +131,7 @@
                     Header = "Jesteśmy tu dla Ciebie",
                     SubHeader = "Masz pytania? Napisz do nas.",
                     OfficeName = "Biuro Obsługi",
-                    Address = "al. Kilińskiego 12 p. 8 Płock",
+                    Address = "Al. Kilińskiego 12 p. 8 Płock",
                     Phone = "+48 123 456 789",
                     Email = "bok@ineed.com",
                     FormContactHeader = "Formularz kontaktowy",
