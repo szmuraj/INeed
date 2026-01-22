@@ -34,15 +34,26 @@ namespace INeed.Helpers
             public const string Black = "#000000";
             public const string White = "#ffffff";
             public const string TextSecondary = "#6c757d";
-
-            // Kolory nagłówka
             public const string TextMain = "#D9D9D9";
             public const string TextHighlight = "#76FF03";
+            public const string TextDark = "#333333"; // Nowy (dla nagłówków kategorii)
             public const string BorderTransparent = "rgba(217,217,217,0.1)";
-
-            // Kolory inputów (JS)
+            public const string FocusOutline = "#0d6efd";
             public const string InputBackgroundActive = "#f0f8ff";
             public const string BorderDefault = "#dee2e6";
+
+            // --- KOLORY WIDOKU WYNIKÓW (RESULTS) ---
+            public const string ProgressBackground = "#f0f0f0"; // Tło paska postępu
+
+            // Sekcja Kobiety
+            public const string BgFemale = "#fff0f6";      // Różowe tło
+            public const string BorderFemale = "#fcc2d7";  // Różowa ramka
+            public const string TextFemale = "#d63384";    // Ciemny róż tekstu
+
+            // Sekcja Mężczyźni
+            public const string BgMale = "#f0f7ff";        // Niebieskie tło
+            public const string BorderMale = "#bac8ff";    // Niebieska ramka
+            public const string TextMale = "#0d6efd";      // Ciemny niebieski tekstu
         }
 
         public static class Routing

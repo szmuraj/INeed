@@ -4,7 +4,6 @@
 @{
     var txt = AppConstants.Texts;
 
-    // DRY: Helper SelectContent
     var title = AppConstants.SelectContent(Model.Title, Model.TitleEN);
     ViewData[AppConstants.Keys.Title] = title;
 
@@ -12,40 +11,44 @@
     var descShort = AppConstants.SelectContent(Model.DecryptionShort, Model.DecryptionShortEN);
     var finalDesc = !string.IsNullOrEmpty(descLong) ? descLong : descShort;
 
-    // DRY: Helper GetVisitorId
     string visitorId = AppConstants.GetVisitorId(ViewBag.VisitorId as string);
 }
 
-<div class="container-fluid py-4">
+@* ZMIANA 3: Użycie <main> dla poprawnej nawigacji (Landmarks) *@
+<main id="main-content" class="container-fluid py-4" role="main" aria-label="Ankieta">
     <div class="row justify-content-center">
         <div class="col-lg-10">
 
-            <div class="d-flex justify-content-between align-items-start mb-5 w-100"
-                 style="color: @AppConstants.Colors.TextMain !important; border-bottom: 1px solid @AppConstants.Colors.BorderTransparent; padding-bottom: 20px;">
+            <header class="d-flex justify-content-between align-items-start mb-5 w-100"
+                    style="color: @AppConstants.Colors.TextMain !important; border-bottom: 1px solid @AppConstants.Colors.BorderTransparent; padding-bottom: 20px;">
 
                 <div style="text-align: left !important; flex: 1;">
-                    <h2 class="fw-bold text-uppercase mb-2" style="color: @AppConstants.Colors.TextMain !important; margin: 0;">@title</h2>
+                    <h1 class="fw-bold text-uppercase mb-2 h2" style="color: @AppConstants.Colors.TextMain !important; margin: 0;">@title</h1>
                     <p class="lead mb-0" style="font-size: 1.05rem; opacity: 0.85; color: @AppConstants.Colors.TextMain !important;">@finalDesc</p>
                 </div>
 
-                <div id="page-counter" class="text-end ps-4" style="min-width: 120px;">
+                <div id="page-counter" class="text-end ps-4" style="min-width: 120px;" aria-live="polite">
                     <div class="fw-bold" style="color: @AppConstants.Colors.TextHighlight !important; font-size: 1.4rem; line-height: 1;">
-                        <span id="current-page">1</span> / <span id="total-pages">1</span>
+                        <span id="current-page">1</span> <span aria-hidden="true">/</span> <span class="visually-hidden">z</span> <span id="total-pages">1</span>
                     </div>
                     <small class="text-uppercase" style="color: @AppConstants.Colors.TextMain; font-size: 0.7rem; letter-spacing: 1px; opacity: 0.6;">@txt.Fill.Page</small>
                 </div>
-            </div>
+            </header>
 
             <form id="questionnaireForm" method="post" asp-action="Fill" asp-route-kw="@Model.Id" asp-route-id="@visitorId">
                 <input type="hidden" name="id" value="@visitorId" />
 
-                <div class="card mb-4 border-0 shadow-sm" style="border-radius: 10px; background-color: @AppConstants.Colors.BackgroundLight;">
+                @* STRONA 1: WYBÓR PŁCI *@
+                <fieldset id="page-gender" class="card mb-4 border-0 shadow-sm" style="border-radius: 10px; background-color: @AppConstants.Colors.BackgroundLight;">
+                    <legend class="visually-hidden">@txt.Labels.GenderSelectionTitle</legend>
+
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-3 text-dark">@txt.Labels.GenderSelectionTitle</h5>
+                        <div class="fw-bold mb-3 text-dark h5" aria-hidden="true">@txt.Labels.GenderSelectionTitle</div>
                         <p class="text-muted small mb-3">@txt.Labels.GenderSelectionInfo</p>
 
                         <div class="d-flex flex-wrap gap-4">
                             <div class="form-check">
+                                @* ZMIANA 1: Dodano id genderF dla łatwego focusowania *@
                                 <input class="form-check-input" type="radio" name="isMale" id="genderF" value="false" style="transform: scale(1.2);">
                                 <label class="form-check-label fw-bold ms-1" for="genderF">@txt.Labels.Woman</label>
                             </div>
@@ -59,30 +62,40 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </fieldset>
 
                 @if (Model.Questions != null && Model.Questions.Any())
                 {
                     <div id="questions-container">
                         @foreach (var question in Model.Questions.OrderBy(q => q.Number))
                         {
-                            <div class="card mb-4 border-0 shadow-sm question-card" style="border-radius: 10px; background-color: @AppConstants.Colors.BackgroundLight;">
+                            <fieldset class="card mb-4 border-0 shadow-sm question-card" style="border-radius: 10px; background-color: @AppConstants.Colors.BackgroundLight;">
+                                <legend class="visually-hidden">
+                                    Pytanie @question.Number: @AppConstants.SelectContent(question.Query, question.QueryEN)
+                                </legend>
+
                                 <div class="card-body p-4">
-                                    <h5 class="fw-bold mb-4 text-dark">
+                                    <div class="fw-bold mb-4 text-dark h5 w-100" aria-hidden="true">
                                         <span class="badge bg-secondary me-2">@question.Number</span>
                                         @AppConstants.SelectContent(question.Query, question.QueryEN)
-                                    </h5>
+                                    </div>
 
                                     @* WERSJA DESKTOP *@
-                                    <div class="d-none d-md-flex flex-row flex-nowrap gap-2 justify-content-between answers-wrapper overflow-auto pb-2">
+                                    <div class="d-none d-md-flex flex-row flex-nowrap gap-2 justify-content-between answers-wrapper overflow-auto pb-2" role="radiogroup">
                                         @foreach (var answer in question.Answers.OrderBy(a => a.Order))
                                         {
+                                            var answerText = AppConstants.SelectContent(answer.Reply, answer.ReplyEN);
                                             <div class="flex-grow-1">
-                                                <input type="radio" class="btn-check" name="Question_@question.QuestionId" id="Answer_@answer.AnswerId" value="@answer.AnswerId">
-                                                <label class="btn text-white fw-bold w-100 shadow-sm d-flex align-items-center justify-content-center"
+                                                <input type="radio" class="btn-check"
+                                                       name="Question_@question.QuestionId"
+                                                       id="Answer_@answer.AnswerId"
+                                                       value="@answer.AnswerId"
+                                                       aria-label="@answerText">
+
+                                                <label class="btn text-white fw-bold w-100 shadow-sm d-flex align-items-center justify-content-center focus-ring"
                                                        for="Answer_@answer.AnswerId"
                                                        style="background-color: @answer.Color; border: 1px solid @answer.Color; min-height: 60px; font-size: 0.9rem;">
-                                                    @AppConstants.SelectContent(answer.Reply, answer.ReplyEN)
+                                                    @answerText
                                                 </label>
                                             </div>
                                         }
@@ -91,7 +104,12 @@
                                     @* WERSJA MOBILE *@
                                     <div class="d-md-none mt-2 position-relative">
                                         <div class="input-group">
+                                            <label for="Select_@question.QuestionId" class="visually-hidden">
+                                                @txt.Fill.SelectOption
+                                            </label>
+
                                             <select class="form-select shadow-sm p-3 text-dark mobile-select"
+                                                    id="Select_@question.QuestionId"
                                                     name="Question_@question.QuestionId"
                                                     style="border-radius: 10px 0 0 10px; border: 1px solid #dee2e6; height: auto;">
                                                 <option value="" selected disabled>@txt.Fill.SelectOption</option>
@@ -104,34 +122,41 @@
                                             </select>
                                             <span class="input-group-text bg-white border-start-0"
                                                   style="border-radius: 0 10px 10px 0; border: 1px solid #dee2e6;">
-                                                <i class="bi bi-exclamation-circle-fill text-danger status-icon fs-4"></i>
+                                                <i class="bi bi-exclamation-circle-fill text-danger status-icon fs-4" aria-hidden="true"></i>
                                             </span>
                                         </div>
                                     </div>
 
                                 </div>
-                            </div>
+                            </fieldset>
                         }
                     </div>
 
                     <div class="mt-5 d-flex gap-3">
-                        <button type="button" id="btn-prev" class="btn btn-secondary fw-bold py-3 shadow-sm" style="border-radius: 10px; font-size: 1.1rem; display: none; width: 150px;">&larr; @txt.Buttons.Back</button>
-                        <button type="button" id="btn-next" class="btn fw-bold py-3 shadow-sm flex-grow-1" style="background-color: @AppConstants.Colors.ButtonAction; color: @AppConstants.Colors.Black; border: none; border-radius: 10px; font-size: 1.1rem;">@txt.Buttons.Continue &rarr;</button>
-                        <button type="submit" id="btn-submit" class="btn fw-bold py-3 shadow-sm flex-grow-1" style="background-color: @AppConstants.Colors.ButtonSubmit; color: @AppConstants.Colors.Black; border-radius: 10px; font-size: 1.1rem; display: none;">@txt.Buttons.SendAnswers &rarr;</button>
+                        <button type="button" id="btn-prev" class="btn btn-secondary fw-bold py-3 shadow-sm" style="border-radius: 10px; font-size: 1.1rem; display: none; width: 150px;">
+                            <span aria-hidden="true">&larr;</span> @txt.Buttons.Back
+                        </button>
+                        <button type="button" id="btn-next" class="btn fw-bold py-3 shadow-sm flex-grow-1" style="background-color: @AppConstants.Colors.ButtonAction; color: @AppConstants.Colors.Black; border: none; border-radius: 10px; font-size: 1.1rem;">
+                            @txt.Buttons.Continue <span aria-hidden="true">&rarr;</span>
+                        </button>
+                        <button type="submit" id="btn-submit" class="btn fw-bold py-3 shadow-sm flex-grow-1" style="background-color: @AppConstants.Colors.ButtonSubmit; color: @AppConstants.Colors.Black; border-radius: 10px; font-size: 1.1rem; display: none;">
+                            @txt.Buttons.SendAnswers <span aria-hidden="true">&rarr;</span>
+                        </button>
                     </div>
                 }
                 else
                 {
-                    <div class="alert alert-warning">@txt.Fill.NoQuestions</div>
+                    <div class="alert alert-warning" role="alert">@txt.Fill.NoQuestions</div>
                 }
             </form>
         </div>
     </div>
-</div>
+</main>
 
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            // ... (Obsługa stylowania checkboxów i selectów bez zmian) ...
             const inputs = document.querySelectorAll('.btn-check');
             inputs.forEach(input => {
                 input.addEventListener('change', function() {
@@ -143,12 +168,11 @@
             const selects = document.querySelectorAll('select.mobile-select');
             selects.forEach(select => {
                 const updateStyle = () => {
-                    // Wstrzykiwanie stałych z C#
+                    // (Logika kolorów bez zmian - użycie stałych)
                     const colorActive = '@AppConstants.Colors.ActiveNav';
                     const colorBorderDefault = '@AppConstants.Colors.BorderDefault';
                     const colorBgActive = '@AppConstants.Colors.InputBackgroundActive';
                     const colorBgDefault = '@AppConstants.Colors.White';
-
                     const container = select.closest('.input-group');
                     const icon = container.querySelector('.status-icon');
                     const addon = container.querySelector('.input-group-text');
@@ -178,6 +202,8 @@
                 updateStyle();
             });
 
+            // LOGIKA PAGINACJI I FOCUSU
+            const genderSection = document.getElementById('page-gender');
             const questions = document.querySelectorAll('.question-card');
             const itemsPerPage = 5;
             let currentPage = 1;
@@ -192,6 +218,12 @@
             if(totalPagesSpan) totalPagesSpan.innerText = totalPages;
 
             function validatePage(page) {
+                // Walidacja Strony 1 (Płeć + ewentualne pytania jeśli są na stronie 1)
+                // W tym modelu płeć jest zawsze widoczna na górze, ale traktujemy ją jako "must fill"
+                // Sprawdzamy, czy płeć jest zaznaczona (input checked)
+                const genderChecked = document.querySelector('input[name="isMale"]:checked');
+                if (!genderChecked && currentPage === 1) return false;
+
                 const start = (page - 1) * itemsPerPage;
                 const end = start + itemsPerPage;
                 for (let i = start; i < end; i++) {
@@ -210,15 +242,42 @@
             }
 
             function showPage(page) {
+                // 1. Ukryj wszystkie pytania
                 questions.forEach(q => q.style.display = 'none');
+
+                // 2. Pokaż właściwe pytania
                 const start = (page - 1) * itemsPerPage;
                 const end = start + itemsPerPage;
                 for (let i = start; i < end; i++) {
                     if (questions[i]) questions[i].style.display = 'block';
                 }
+
                 if(pageCountSpan) pageCountSpan.innerText = page;
+
+                // 3. Przewiń do góry
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
+                // ZMIANA 1: Logika Fokusu
+                setTimeout(() => {
+                    if (page === 1) {
+                        // Strona 1: Fokusuj wybór płci
+                        const genderInput = document.getElementById('genderF');
+                        if (genderInput) genderInput.focus({ preventScroll: true });
+                    } else {
+                        // Strona > 1: Fokusuj pierwsze pytanie na nowej stronie
+                        const firstNewQuestion = questions[start];
+                        if (firstNewQuestion) {
+                            let targetInput = firstNewQuestion.querySelector('input[type="radio"]');
+                            // Fallback dla mobile (select)
+                            if (targetInput && targetInput.offsetParent === null) {
+                                 targetInput = firstNewQuestion.querySelector('select');
+                            }
+                            if (targetInput) targetInput.focus({ preventScroll: true });
+                        }
+                    }
+                }, 300); // Mały delay dla stabilności animacji
+
+                // Zarządzanie przyciskami
                 if(btnPrev) btnPrev.style.display = (page > 1) ? 'block' : 'none';
                 if (page === totalPages) {
                     if(btnNext) btnNext.style.display = 'none';
@@ -228,6 +287,23 @@
                     if(btnSubmit) btnSubmit.style.display = 'none';
                 }
             }
+
+            // ZMIANA 2: Obsługa klawisza ENTER
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    // Ignoruj Enter na elementach, które same go obsługują (linki, buttony)
+                    if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+
+                    e.preventDefault(); // Zablokuj domyślne wysłanie formularza
+
+                    // Symuluj kliknięcie w "Dalej" lub "Wyślij"
+                    if (currentPage < totalPages) {
+                        btnNext.click();
+                    } else {
+                        btnSubmit.click();
+                    }
+                }
+            });
 
             if(btnNext) btnNext.addEventListener('click', function () {
                 if (validatePage(currentPage)) {
@@ -258,6 +334,16 @@
 }
 
 <style>
+    /* WCAG Focus Styles */
+    .btn-check:focus-visible + .btn,
+    .form-select:focus-visible,
+    .form-check-input:focus-visible,
+    .btn:focus-visible {
+        outline: 3px solid @AppConstants.Colors.FocusOutline !important;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
     .btn-check:checked + .btn {
         box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.5) !important;
         z-index: 10;
