@@ -5,6 +5,7 @@ using INeed.Models;
 using INeed.Services;
 using INeed.Helpers;
 using System.Diagnostics;
+using System.Text; // Potrzebne do StringBuilder
 
 namespace INeed.Controllers
 {
@@ -19,7 +20,6 @@ namespace INeed.Controllers
             _emailService = emailService;
         }
 
-        // ZMIANA: Parametr nazywa siê teraz 'visitorId', co wymusi przekazanie go w query string (?visitorId=...)
         public async Task<IActionResult> Index(string visitorId = "000000")
         {
             ViewBag.VisitorId = visitorId;
@@ -43,7 +43,6 @@ namespace INeed.Controllers
             return View();
         }
 
-        // ZMIANA: Parametr visitorId zamiast id
         public IActionResult Contact(string visitorId = "000000")
         {
             ViewBag.VisitorId = visitorId;
@@ -77,7 +76,73 @@ namespace INeed.Controllers
                 TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.FormIncomplete;
             }
 
-            // Przekierowanie z zachowaniem visitorId w adresie
+            return RedirectToAction(AppConstants.Routing.ActionContact, new { visitorId });
+        }
+
+        // --- NOWA METODA: WYSY£ANIE ZBIORCZYCH WYNIKÓW ---
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendAllResults(string email, string visitorId)
+        {
+            // Zabezpieczenie visitorId
+            if (string.IsNullOrEmpty(visitorId)) visitorId = "000000";
+
+            if (string.IsNullOrEmpty(email))
+            {
+                TempData[AppConstants.Keys.ContactError] = "Proszê podaæ adres e-mail.";
+                return RedirectToAction(AppConstants.Routing.ActionContact, new { visitorId });
+            }
+
+            // Pobranie wszystkich wyników dla danego u¿ytkownika wraz z relacjami
+            var results = await _context.VisitorResults
+                .Include(r => r.Form)
+                .Include(r => r.CategoryScores).ThenInclude(cs => cs.Category)
+                .Where(r => r.VisitorId == visitorId)
+                .OrderByDescending(r => r.Date) // Najnowsze na górze
+                .ToListAsync();
+
+            if (!results.Any())
+            {
+                TempData[AppConstants.Keys.ContactError] = "Nie znaleziono ¿adnych wyników dla Twojego identyfikatora.";
+                return RedirectToAction(AppConstants.Routing.ActionContact, new { visitorId });
+            }
+
+            // Budowanie treœci maila
+            var sb = new StringBuilder();
+            sb.Append($"<div style='font-family: Arial, sans-serif; padding: 20px;'>");
+            sb.Append($"<h2 style='color: {AppConstants.Colors.Primary};'>Twoje zbiorcze wyniki</h2>");
+            sb.Append($"<p>Poni¿ej znajduj¹ siê wszystkie wyniki ankiet powi¹zane z identyfikatorem: <strong>{visitorId}</strong></p>");
+            sb.Append("<hr>");
+
+            foreach (var result in results)
+            {
+                sb.Append($"<div style='margin-bottom: 30px; border: 1px solid #eee; padding: 15px; border-radius: 8px;'>");
+                sb.Append($"<h3 style='margin-top: 0;'>{result.Form?.Title ?? "Nieznana ankieta"}</h3>");
+                sb.Append($"<p style='color: #666; font-size: 0.9em;'>Data wype³nienia: {result.Date:yyyy-MM-dd HH:mm}</p>");
+
+                sb.Append("<table style='width: 100%; border-collapse: collapse;'>");
+                foreach (var score in result.CategoryScores)
+                {
+                    sb.Append("<tr>");
+                    sb.Append($"<td style='padding: 5px; border-bottom: 1px solid #f0f0f0;'><strong>{score.Category?.Name ?? "Kategoria"}</strong></td>");
+                    sb.Append($"<td style='padding: 5px; border-bottom: 1px solid #f0f0f0; text-align: right;'>Wynik: {score.Score}</td>");
+                    sb.Append("</tr>");
+                }
+                sb.Append("</table>");
+                sb.Append("</div>");
+            }
+            sb.Append("</div>");
+
+            try
+            {
+                await _emailService.SendEmailAsync(email, "Twoje zbiorcze wyniki - INeed", sb.ToString());
+                TempData[AppConstants.Keys.ContactSuccess] = "Wszystkie wyniki zosta³y wys³ane na podany adres e-mail.";
+            }
+            catch
+            {
+                TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.EmailSentError;
+            }
+
             return RedirectToAction(AppConstants.Routing.ActionContact, new { visitorId });
         }
 
