@@ -24,9 +24,7 @@ namespace INeed.Controllers
             _emailService = emailService;
         }
 
-        // GET: /Fill?kw=1&visitorId=000000
         [HttpGet(AppConstants.FillRoute)]
-        // ZMIANA: Używamy wprost nazwy visitorId, bez mapowania na "id"
         public async Task<IActionResult> Fill(int kw, string visitorId = "000000")
         {
             if (kw == 0) return NotFound();
@@ -177,11 +175,15 @@ namespace INeed.Controllers
         {
             if (string.IsNullOrEmpty(email)) return RedirectToAction("Index", "Home");
 
+            // --- ZMIANA: Pobieramy zasoby dynamicznie ---
+            var txt = AppConstants.Texts;
+
             string rows = "";
             foreach (var cat in model.Categories)
             {
+                // --- ZMIANA: Używamy dynamicznych etykiet Woman/Man ---
                 string adviceText = model.IsMale == null
-                    ? $"Kobieta: {cat.AdviceFemale} <br> Mężczyzna: {cat.AdviceMale}"
+                    ? $"{txt.Labels.Woman}: {cat.AdviceFemale} <br> {txt.Labels.Man}: {cat.AdviceMale}"
                     : cat.Advice;
 
                 rows += GenerateEmailRow(cat, adviceText, model.IsMale);
@@ -189,18 +191,18 @@ namespace INeed.Controllers
 
             string emailBody = $@"
                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
-                    <h2 style='color: {AppConstants.Colors.Primary}; text-align: center;'>{AppConstants.Texts.Messages.Wyniki}: {model.FormTitle}</h2>
+                    <h2 style='color: {AppConstants.Colors.Primary}; text-align: center;'>{txt.Messages.Wyniki}: {model.FormTitle}</h2>
                     {rows}
                 </div>";
 
             try
             {
-                await _emailService.SendEmailAsync(email, $"{AppConstants.Texts.Messages.YourResults} {model.FormTitle}", emailBody);
-                TempData[AppConstants.Keys.SuccessMessage] = AppConstants.Texts.Messages.EmailSentSuccess;
+                await _emailService.SendEmailAsync(email, $"{txt.Messages.YourResults} {model.FormTitle}", emailBody);
+                TempData[AppConstants.Keys.SuccessMessage] = txt.Messages.EmailSentSuccess;
             }
             catch
             {
-                TempData[AppConstants.Keys.ErrorMessage] = AppConstants.Texts.Messages.EmailSentError;
+                TempData[AppConstants.Keys.ErrorMessage] = txt.Messages.EmailSentError;
             }
 
             return View("Result", model);

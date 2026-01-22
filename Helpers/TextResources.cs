@@ -18,7 +18,6 @@
 
     public class LayoutResources
     {
-        // NOWE POLA
         public string Home { get; set; }
         public string Privacy { get; set; }
 
@@ -37,6 +36,10 @@
         public string MessagePlaceholder { get; set; }
         public string EmailPlaceholder { get; set; }
         public string FirstName { get; set; }
+        public string Woman { get; set; }
+        public string Man { get; set; }
+        public string Category { get; set; }
+        public string ResultScore { get; set; }
     }
 
     public class ButtonResources
@@ -104,6 +107,15 @@
         public string YourResults { get; set; }
         public string EmailSentSuccess { get; set; }
         public string EmailSentError { get; set; }
+
+        // POLA DLA RAPORTU ZBIORCZEGO
+        public string CombinedResultsTitle { get; set; }
+        public string ResultsForIdBody { get; set; }
+        public string UnknownSurvey { get; set; }
+        public string FillDate { get; set; }
+        public string NoResultsFound { get; set; }
+        public string EmailRequired { get; set; }
+        public string AllResultsSentSuccess { get; set; }
     }
 
     public class ResultResources
