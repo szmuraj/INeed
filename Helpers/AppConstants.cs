@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using INeed.Models;
+using INeed.Models.ViewModels;
+using System.Globalization;
 
 namespace INeed.Helpers
 {
@@ -87,5 +89,74 @@ namespace INeed.Helpers
 
         // Zwraca odpowiedni zestaw tekstów w zależności od języka
         public static TextResources Texts => IsEn ? AppConstantsEN.Get() : AppConstantsPL.Get();
+
+
+        // =========================================================
+        // 3. FABRYKA TREŚCI (NOWE)
+        // =========================================================
+        
+        public static InfoPageVm? GetPageContent(string pageId)
+        {
+            var txt = Texts;
+
+            return pageId?.ToLower() switch
+            {
+                "privacy" => new InfoPageVm
+                {
+                    Title = txt.Layout.PrivacyPolicy,
+                    Subtitle = txt.Layout.CookieHeader,
+                    HtmlContent = txt.PolicyContent.PrivacyAndCookies
+                },
+
+                "terms" => new InfoPageVm
+                {
+                    Title = txt.Layout.Terms,
+                    Subtitle = txt.CompanyName,
+                    HtmlContent = txt.PolicyContent.Terms
+                },
+
+                _ => null // Nieznana strona
+            };
+        }
+
+        // =========================================================
+        // 4. METODY POMOCNICZE (DRY)
+        // =========================================================
+
+        public static string GetVisitorId(string? visitorId)
+        {
+            return string.IsNullOrEmpty(visitorId) ? Defaults.VisitorId : visitorId;
+        }
+
+        // =========================================================
+        // 5. HELPERY TREŚCI (SCALABILITY)
+        // =========================================================
+
+        public static string SelectContent(string defaultContent, string? enContent)
+        {
+            if (IsEn && !string.IsNullOrEmpty(enContent))
+            {
+                return enContent;
+            }
+            return defaultContent;
+        }
+
+        public static bool IsCategoryMatch(Category cat, string key)
+        {
+            if (cat == null || string.IsNullOrWhiteSpace(key)) return false;
+
+            var k = key.Trim();
+
+            // 1. Sprawdź PL (Default)
+            if (cat.Name.Trim().Equals(k, StringComparison.OrdinalIgnoreCase)) return true;
+
+            // 2. Sprawdź EN
+            if (cat.NameEN != null && cat.NameEN.Trim().Equals(k, StringComparison.OrdinalIgnoreCase)) return true;
+
+            // 3. W przyszłości:
+            // if (cat.NameDE != null && cat.NameDE.Trim().Equals(k, StringComparison.OrdinalIgnoreCase)) return true;
+
+            return false;
+        }
     }
 }

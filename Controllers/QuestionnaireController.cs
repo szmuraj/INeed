@@ -25,11 +25,9 @@ namespace INeed.Controllers
         }
 
         [HttpGet(AppConstants.FillRoute)]
-        // ZMIANA: Usunięto = "000000" z sygnatury
         public async Task<IActionResult> Fill(int kw, string visitorId)
         {
-            // ZMIANA: Logika przeniesiona do środka
-            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
+            visitorId = AppConstants.GetVisitorId(visitorId);
 
             if (kw == 0) return NotFound();
 
@@ -48,8 +46,7 @@ namespace INeed.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Fill(int kw, string visitorId, bool? isMale, IFormCollection collection)
         {
-            // ZMIANA: Użycie stałej AppConstants.Defaults.VisitorId
-            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
+            visitorId = AppConstants.GetVisitorId(visitorId);
 
             var questionnaire = await _context.Forms
                 .Include(f => f.Questions).ThenInclude(q => q.Answers)
@@ -57,8 +54,7 @@ namespace INeed.Controllers
 
             if (questionnaire == null) return NotFound();
 
-            bool isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
-            string formTitle = (isEn && !string.IsNullOrEmpty(questionnaire.TitleEN)) ? questionnaire.TitleEN : questionnaire.Title;
+            string formTitle = AppConstants.SelectContent(questionnaire.Title, questionnaire.TitleEN);
 
             var finalResult = new FinalResultVm
             {
@@ -83,10 +79,10 @@ namespace INeed.Controllers
 
             foreach (var group in groupedQuestions)
             {
-                var categoryDef = dbCategories.FirstOrDefault(c =>
-                    c.Name.Trim().Equals(group.Key, StringComparison.OrdinalIgnoreCase) ||
-                    (c.NameEN != null && c.NameEN.Trim().Equals(group.Key, StringComparison.OrdinalIgnoreCase)));
+                var categoryDef = dbCategories.FirstOrDefault(c => AppConstants.IsCategoryMatch(c, group.Key));
 
+                // ZABEZPIECZENIE: Jeśli kategoria nie została znaleziona w bazie, pomijamy te pytania, 
+                // aby nie psuć obliczeń (ewentualnie tutaj można dodać logowanie błędu)
                 if (categoryDef == null) continue;
 
                 int actualScore = 0;
@@ -94,18 +90,39 @@ namespace INeed.Controllers
 
                 foreach (var q in group)
                 {
+                    // Maksymalny możliwy wynik dla tego pytania
                     maxScore += q.Answers.Any() ? q.Answers.Max(a => a.Score) : 0;
-                    if (collection.TryGetValue($"Question_{q.QuestionId}", out var val) && Guid.TryParse(val, out Guid aId))
+
+                    // KLUCZOWA POPRAWKA PUNKTACJI
+                    // Sprawdzamy, czy w formularzu są dane dla tego pytania
+                    string key = $"Question_{q.QuestionId}";
+
+                    if (collection.ContainsKey(key))
                     {
-                        actualScore += q.Answers.FirstOrDefault(a => a.AnswerId == aId)?.Score ?? 0;
+                        var submittedValues = collection[key]; // To może zawierać np. ["", "GUID"] lub sam "GUID"
+
+                        // Szukamy pierwszej wartości, która jest poprawnym AnswerId
+                        foreach (var value in submittedValues)
+                        {
+                            if (!string.IsNullOrEmpty(value) && Guid.TryParse(value, out Guid selectedAnswerId))
+                            {
+                                // Znaleziono ID odpowiedzi - pobieramy jej punkty
+                                var answer = q.Answers.FirstOrDefault(a => a.AnswerId == selectedAnswerId);
+                                if (answer != null)
+                                {
+                                    actualScore += answer.Score;
+                                    break; // Mamy odpowiedź dla tego pytania, przerywamy szukanie duplikatów
+                                }
+                            }
+                        }
                     }
                 }
 
                 int stenF = CalculateSten(actualScore, categoryDef.StenNormsFemale);
                 int stenM = CalculateSten(actualScore, categoryDef.StenNormsMale);
 
-                string adviceF = GetAdvice(stenF, categoryDef, isEn);
-                string adviceM = GetAdvice(stenM, categoryDef, isEn);
+                string adviceF = GetAdvice(stenF, categoryDef);
+                string adviceM = GetAdvice(stenM, categoryDef);
 
                 int userSten = 0;
                 string userAdvice = "";
@@ -113,12 +130,12 @@ namespace INeed.Controllers
                 if (isMale == false) { userSten = stenF; userAdvice = adviceF; }
                 else if (isMale == true) { userSten = stenM; userAdvice = adviceM; }
 
-                string displayName = (isEn && !string.IsNullOrEmpty(categoryDef.NameEN)) ? categoryDef.NameEN : categoryDef.Name;
+                string displayName = AppConstants.SelectContent(categoryDef.Name, categoryDef.NameEN);
 
                 finalResult.Categories.Add(new CategoryResultVm
                 {
                     CategoryName = displayName,
-                    Color = categoryDef.Color ?? "#6c757d",
+                    Color = categoryDef.Color ?? AppConstants.Colors.TextSecondary,
                     ScoreObtained = actualScore,
                     ScoreMax = maxScore,
                     StenUser = userSten,
@@ -157,21 +174,36 @@ namespace INeed.Controllers
             catch { return 0; }
         }
 
-        private string GetAdvice(int sten, Category cat, bool isEn)
+        private string GetAdvice(int sten, Category cat)
         {
             if (cat == null) return string.Empty;
-            if (sten <= 4) return isEn ? (cat.AdviceLowEN ?? "") : (cat.AdviceLow ?? "");
-            if (sten <= 6) return isEn ? (cat.AdviceAvgEN ?? "") : (cat.AdviceAvg ?? "");
-            return isEn ? (cat.AdviceHighEN ?? "") : (cat.AdviceHigh ?? "");
+
+            string pl = "";
+            string en = "";
+
+            if (sten <= 4)
+            {
+                pl = cat.AdviceLow; en = cat.AdviceLowEN;
+            }
+            else if (sten <= 6)
+            {
+                pl = cat.AdviceAvg; en = cat.AdviceAvgEN;
+            }
+            else
+            {
+                pl = cat.AdviceHigh; en = cat.AdviceHighEN;
+            }
+
+            return AppConstants.SelectContent(pl, en);
         }
 
         private string GetStenDescription(int sten)
         {
             if (sten == 0) return "-";
-            bool isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
-            if (sten <= 4) return isEn ? "Low" : "Niski";
-            if (sten <= 6) return isEn ? "Average" : "Przeciętny";
-            return isEn ? "High" : "Wysoki";
+            var labels = AppConstants.Texts.Labels;
+            if (sten <= 4) return labels.StenLow;
+            if (sten <= 6) return labels.StenAverage;
+            return labels.StenHigh;
         }
 
         [HttpPost]

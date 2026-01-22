@@ -12,7 +12,6 @@
     var descShort = (isEn && !string.IsNullOrEmpty(Model.DecryptionShortEN)) ? Model.DecryptionShortEN : Model.DecryptionShort;
     var finalDesc = !string.IsNullOrEmpty(descLong) ? descLong : descShort;
 
-    // ZMIANA: Użycie stałej AppConstants.Defaults.VisitorId
     string visitorId = ViewBag.VisitorId as string ?? AppConstants.Defaults.VisitorId;
 }
 
@@ -243,12 +242,7 @@
                         alert(@Json.Serialize(txt.Fill.AlertAll));
                         return;
                     }
-                    document.querySelectorAll('select[name^="Question_"]').forEach(el => {
-                        if (el.offsetParent === null) el.disabled = true;
-                    });
-                    document.querySelectorAll('input[type="radio"][name^="Question_"]').forEach(el => {
-                        if (el.offsetParent === null) el.disabled = true;
-                    });
+                    // ZMIANA: Usunięto blokowanie inputów, które powodowało zerowy wynik
                 });
             }
 

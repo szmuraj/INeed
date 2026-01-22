@@ -34,7 +34,10 @@
                     ResultScore = "Wynik",
                     GenderSelectionTitle = "Wybierz swoją płeć:",
                     GenderSelectionInfo = "Wybór ma wpływ na normy. Wybierz 'Nie podaję', aby zobaczyć wyniki dla obu płci.",
-                    DontSpecify = "Nie podaję"
+                    DontSpecify = "Nie podaję",
+                    StenLow = "Niski",
+                    StenAverage = "Przeciętny",
+                    StenHigh = "Wysoki"
                 },
 
                 Buttons = new ButtonResources

@@ -42,6 +42,9 @@
         public string GenderSelectionTitle { get; set; }
         public string GenderSelectionInfo { get; set; }
         public string DontSpecify { get; set; }
+        public string StenLow { get; set; }
+        public string StenAverage { get; set; }
+        public string StenHigh { get; set; }
     }
 
     public class ButtonResources

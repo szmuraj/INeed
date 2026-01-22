@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace INeed.Models.ViewModels
+﻿namespace INeed.Models.ViewModels
 {
     public class CategoryResultVm
     {
@@ -27,14 +25,11 @@ namespace INeed.Models.ViewModels
 
     public class FinalResultVm
     {
-        // KLUCZOWE POLE DO NAPRAWY POWROTU
         public int FormId { get; set; }
 
         public string FormTitle { get; set; }
         public string VisitorId { get; set; }
-
-        // true = Mężczyzna, false = Kobieta, null = Brak wyboru
-        public bool? IsMale { get; set; }
+        public bool? IsMale { get; set; } // true = Mężczyzna, false = Kobieta, null = Brak wyboru
 
         public List<CategoryResultVm> Categories { get; set; } = new List<CategoryResultVm>();
     }

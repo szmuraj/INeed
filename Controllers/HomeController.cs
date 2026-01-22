@@ -23,7 +23,7 @@ namespace INeed.Controllers
 
         public async Task<IActionResult> Index(string visitorId)
         {
-            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
+            visitorId = AppConstants.GetVisitorId(visitorId);
             ViewBag.VisitorId = visitorId;
 
             var forms = _context.Forms != null
@@ -33,33 +33,20 @@ namespace INeed.Controllers
             return View(forms);
         }
 
-        // ZMIANA: Jedna uniwersalna metoda obs³uguj¹ca strony informacyjne
+        // Jedna uniwersalna metoda obs³uguj¹ca strony informacyjne
         // Wywo³anie: /Home/Info/privacy lub /Home/Info/terms
         public IActionResult Info(string id, string visitorId)
         {
-            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
+            visitorId = AppConstants.GetVisitorId(visitorId);
             ViewBag.VisitorId = visitorId;
 
-            var txt = AppConstants.Texts;
-            var model = new InfoPageVm();
+            // Pobieramy gotowy model z AppConstants
+            var model = AppConstants.GetPageContent(id);
 
-            switch (id?.ToLower())
+            // Jeœli model to null (czyli podano z³e id, np. "test"), przekieruj na g³ówn¹
+            if (model == null)
             {
-                case "privacy":
-                    model.Title = txt.Layout.PrivacyPolicy;
-                    model.Subtitle = txt.Layout.CookieHeader;
-                    model.HtmlContent = txt.PolicyContent.PrivacyAndCookies;
-                    break;
-
-                case "terms":
-                    model.Title = txt.Layout.Terms;
-                    model.Subtitle = txt.CompanyName;
-                    model.HtmlContent = txt.PolicyContent.Terms;
-                    break;
-
-                default:
-                    // Jeœli podano nieznany ID (np. /Home/Info/xyz), wróæ na g³ówn¹
-                    return RedirectToAction(nameof(Index), new { visitorId });
+                return RedirectToAction(nameof(Index), new { visitorId });
             }
 
             return View("InfoPage", model);
@@ -67,7 +54,7 @@ namespace INeed.Controllers
 
         public IActionResult Contact(string visitorId)
         {
-            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
+            visitorId = AppConstants.GetVisitorId(visitorId);
             ViewBag.VisitorId = visitorId;
             return View();
         }
@@ -76,7 +63,7 @@ namespace INeed.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendMessage(string email, string message, bool rodoConsent, string visitorId)
         {
-            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
+            visitorId = AppConstants.GetVisitorId(visitorId);
 
             if (!rodoConsent)
             {
@@ -108,7 +95,7 @@ namespace INeed.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendAllResults(string email, string visitorId)
         {
-            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
+            visitorId = AppConstants.GetVisitorId(visitorId);
 
             if (string.IsNullOrEmpty(email))
             {
@@ -172,7 +159,7 @@ namespace INeed.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteData(string visitorId)
         {
-            if (string.IsNullOrEmpty(visitorId)) visitorId = AppConstants.Defaults.VisitorId;
+            visitorId = AppConstants.GetVisitorId(visitorId);
 
             var results = await _context.VisitorResults
                 .Where(r => r.VisitorId == visitorId)

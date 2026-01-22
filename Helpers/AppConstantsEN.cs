@@ -34,7 +34,10 @@
                     ResultScore = "Score",
                     GenderSelectionTitle = "Select your gender:",
                     GenderSelectionInfo = "This selection affects result norms.",
-                    DontSpecify = "Don't specify"
+                    DontSpecify = "Don't specify",
+                    StenLow = "Low",
+                    StenAverage = "Average",
+                    StenHigh = "High"
                 },
 
                 Buttons = new ButtonResources
