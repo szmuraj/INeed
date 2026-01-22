@@ -18,6 +18,10 @@
 
     public class LayoutResources
     {
+        // NOWE POLA
+        public string Home { get; set; }
+        public string Privacy { get; set; }
+
         public string Questionnaires { get; set; }
         public string Contact { get; set; }
         public string PrivacyPolicy { get; set; }
@@ -82,14 +86,11 @@
 
     public class MessageResources
     {
-        // Ogólne
         public string Success { get; set; }
         public string Error { get; set; }
         public string ValidationRequired { get; set; }
         public string EmailSent { get; set; }
         public string DataDeleted { get; set; }
-
-        // ContactController
         public string RodoRequired { get; set; }
         public string NewMessage { get; set; }
         public string ContactSuccess { get; set; }
@@ -97,14 +98,12 @@
         public string FormIncomplete { get; set; }
         public string UnsubscribeSuccess { get; set; }
         public string EmailNotFound { get; set; }
-
-        // --- BRAKUJĄCE POLA DLA QUESTIONNAIRE CONTROLLER ---
-        public string Wyniki { get; set; } // Wyniki
-        public string EmailThanks { get; set; } // Podziękowanie w mailu
-        public string GeneratedBy { get; set; } // Stopka maila
-        public string YourResults { get; set; } // Temat maila
-        public string EmailSentSuccess { get; set; } // Komunikat sukcesu po wysłaniu
-        public string EmailSentError { get; set; } // Komunikat błędu
+        public string Wyniki { get; set; }
+        public string EmailThanks { get; set; }
+        public string GeneratedBy { get; set; }
+        public string YourResults { get; set; }
+        public string EmailSentSuccess { get; set; }
+        public string EmailSentError { get; set; }
     }
 
     public class ResultResources

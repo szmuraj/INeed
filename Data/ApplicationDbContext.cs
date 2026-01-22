@@ -13,13 +13,12 @@ namespace INeed.Data
         {
         }
 
-        public DbSet<Sub>? Subs { get; set; }
+        // USUNIĘTO: public DbSet<Sub>? Subs { get; set; }
         public DbSet<Form>? Forms { get; set; }
         public DbSet<Question>? Questions { get; set; }
         public DbSet<Answer>? Answers { get; set; }
         public DbSet<Category> Categories { get; set; }
 
-        // --- BRAKUJĄCE DBSETS ---
         public DbSet<VisitorResult> VisitorResults { get; set; }
         public DbSet<VisitorCategoryScore> VisitorCategoryScores { get; set; }
 
@@ -27,7 +26,8 @@ namespace INeed.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Sub>().HasKey(s => s.SubId);
+            // USUNIĘTO konfigurację dla Sub
+            // modelBuilder.Entity<Sub>().HasKey(s => s.SubId);
 
             // Konfiguracja Form -> Questions
             modelBuilder.Entity<Question>()

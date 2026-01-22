@@ -24,9 +24,10 @@ namespace INeed.Controllers
             _emailService = emailService;
         }
 
-        // GET: /Questionnaire/Fill?kw=1&id=000000
+        // GET: /Fill?kw=1&visitorId=000000
         [HttpGet(AppConstants.FillRoute)]
-        public async Task<IActionResult> Fill(int kw, [FromQuery(Name = "id")] string visitorId = "000000")
+        // ZMIANA: Używamy wprost nazwy visitorId, bez mapowania na "id"
+        public async Task<IActionResult> Fill(int kw, string visitorId = "000000")
         {
             if (kw == 0) return NotFound();
 
@@ -36,18 +37,15 @@ namespace INeed.Controllers
 
             if (form == null || !form.IsActive) return NotFound();
 
-            // Przekazujemy ID do widoku
             ViewBag.VisitorId = visitorId;
 
             return View(form);
         }
 
-        // POST: Zapis wyników
         [HttpPost(AppConstants.FillRoute)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Fill(int kw, string visitorId, bool? isMale, IFormCollection collection)
         {
-            // Zabezpieczenie: jeśli puste, ustaw 000000
             if (string.IsNullOrEmpty(visitorId)) visitorId = "000000";
 
             var questionnaire = await _context.Forms
@@ -59,10 +57,9 @@ namespace INeed.Controllers
             bool isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
             string formTitle = (isEn && !string.IsNullOrEmpty(questionnaire.TitleEN)) ? questionnaire.TitleEN : questionnaire.Title;
 
-            // TWORZENIE VIEW MODELU (z przypisanym FormId!)
             var finalResult = new FinalResultVm
             {
-                FormId = kw, // <--- Tutaj przekazujemy ID formularza, żeby widok Result go znał
+                FormId = kw,
                 FormTitle = formTitle,
                 VisitorId = visitorId,
                 IsMale = isMale
@@ -179,18 +176,6 @@ namespace INeed.Controllers
         public async Task<IActionResult> SendResult(FinalResultVm model, string email)
         {
             if (string.IsNullOrEmpty(email)) return RedirectToAction("Index", "Home");
-
-            var existingSub = await _context.Subs.FirstOrDefaultAsync(s => s.Email == email);
-            if (existingSub == null)
-            {
-                _context.Subs.Add(new Sub { Email = email, IsActive = true, Newsletter = true, AddedAt = DateTime.Now });
-                await _context.SaveChangesAsync();
-            }
-            else if (!existingSub.IsActive)
-            {
-                existingSub.IsActive = true;
-                await _context.SaveChangesAsync();
-            }
 
             string rows = "";
             foreach (var cat in model.Categories)

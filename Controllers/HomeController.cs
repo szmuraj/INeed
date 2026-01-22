@@ -19,8 +19,11 @@ namespace INeed.Controllers
             _emailService = emailService;
         }
 
-        public async Task<IActionResult> Index()
+        // ZMIANA: Parametr nazywa siê teraz 'visitorId', co wymusi przekazanie go w query string (?visitorId=...)
+        public async Task<IActionResult> Index(string visitorId = "000000")
         {
+            ViewBag.VisitorId = visitorId;
+
             var forms = _context.Forms != null
                 ? await _context.Forms.Where(f => f.IsActive).ToListAsync()
                 : new List<Form>();
@@ -28,41 +31,40 @@ namespace INeed.Controllers
             return View(forms);
         }
 
-        public IActionResult Privacy()
+        public IActionResult Privacy(string visitorId = "000000")
         {
+            ViewBag.VisitorId = visitorId;
             return View();
         }
 
-        public IActionResult Terms()
+        public IActionResult Terms(string visitorId = "000000")
         {
+            ViewBag.VisitorId = visitorId;
             return View();
         }
 
-        public IActionResult Contact()
+        // ZMIANA: Parametr visitorId zamiast id
+        public IActionResult Contact(string visitorId = "000000")
         {
+            ViewBag.VisitorId = visitorId;
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendMessage(string email, string message, bool rodoConsent)
+        public async Task<IActionResult> SendMessage(string email, string message, bool rodoConsent, string visitorId = "000000")
         {
             if (!rodoConsent)
             {
-                // POPRAWKA: U¿ywamy Keys dla klucza TempData
                 TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.RodoRequired;
-                // POPRAWKA: U¿ywamy Routing dla nazwy akcji
-                return RedirectToAction(AppConstants.Routing.ActionContact);
+                return RedirectToAction(AppConstants.Routing.ActionContact, new { visitorId });
             }
 
             if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(message))
             {
                 try
                 {
-                    // POPRAWKA: U¿ywamy tekstu z AppConstants.Texts.Contact
                     await _emailService.SendEmailAsync(AppConstants.Texts.Contact.Email, $"{AppConstants.Texts.Messages.NewMessage} {email}", message);
-
-                    // POPRAWKA: U¿ywamy Keys dla klucza
                     TempData[AppConstants.Keys.ContactSuccess] = AppConstants.Texts.Messages.ContactSuccess;
                 }
                 catch
@@ -75,36 +77,32 @@ namespace INeed.Controllers
                 TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.FormIncomplete;
             }
 
-            return RedirectToAction(AppConstants.Routing.ActionContact);
+            // Przekierowanie z zachowaniem visitorId w adresie
+            return RedirectToAction(AppConstants.Routing.ActionContact, new { visitorId });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Unsubscribe(string email)
+        public async Task<IActionResult> DeleteData(string visitorId)
         {
-            if (string.IsNullOrEmpty(email) || _context.Subs == null)
-            {
-                return RedirectToAction(AppConstants.Routing.ActionContact);
-            }
+            if (string.IsNullOrEmpty(visitorId)) visitorId = "000000";
 
-            var sub = await _context.Subs.FirstOrDefaultAsync(s => s.Email == email);
+            var results = await _context.VisitorResults
+                .Where(r => r.VisitorId == visitorId)
+                .ToListAsync();
 
-            if (sub != null)
+            if (results.Any())
             {
-                sub.IsActive = false;
-                sub.Newsletter = false;
-                _context.Subs.Update(sub);
+                _context.VisitorResults.RemoveRange(results);
                 await _context.SaveChangesAsync();
-
-                // POPRAWKA: U¿ywamy Keys dla klucza
-                TempData[AppConstants.Keys.ContactSuccess] = AppConstants.Texts.Messages.UnsubscribeSuccess;
+                TempData[AppConstants.Keys.ContactSuccess] = "Wszystkie dane powi¹zane z Twoim ID zosta³y usuniête.";
             }
             else
             {
-                TempData[AppConstants.Keys.ContactError] = AppConstants.Texts.Messages.EmailNotFound;
+                TempData[AppConstants.Keys.ContactError] = "Nie znaleziono danych dla tego identyfikatora.";
             }
 
-            return RedirectToAction(AppConstants.Routing.ActionContact);
+            return RedirectToAction(AppConstants.Routing.ActionContact, new { visitorId });
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

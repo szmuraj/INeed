@@ -2,6 +2,48 @@
 @using INeed.Helpers
 @inject ApplicationDbContext _context
 
+@{
+    // --- LOGIKA UTRZYMANIA VISITOR ID ---
+    // Pobieramy ID z ViewBag lub z QueryString ("visitorId")
+    var currentVisitorId = ViewBag.VisitorId as string;
+    if (string.IsNullOrEmpty(currentVisitorId))
+    {
+        // Sprawdzamy parametr visitorId (zgodny z nowym nazewnictwem)
+        currentVisitorId = Context.Request.Query["visitorId"].ToString();
+    }
+    // Domyślna wartość, jeśli brak ID
+    if (string.IsNullOrEmpty(currentVisitorId))
+    {
+        currentVisitorId = "000000";
+    }
+
+    // Funkcja pomocnicza do podświetlania aktywnego przycisku w menu
+    string GetButtonColor(string controller, string action, string? formId = null)
+    {
+        var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+        var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+
+        // Sprawdzamy parametry z URL (QueryString dla 'kw')
+        var queryKw = Context.Request.Query["kw"].ToString();
+
+        bool isControllerMatch = string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase);
+        bool isActionMatch = string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
+
+        if (isControllerMatch && isActionMatch)
+        {
+            // Jeśli formId jest nullem (np. Home/Index), wystarczy zgodność kontrolera i akcji
+            if (formId == null) return AppConstants.Colors.ActiveNav;
+
+            // Jeśli formId jest podane (dla ankiet), sprawdzamy czy parametr 'kw' w URL pasuje do id formularza
+            if (!string.IsNullOrEmpty(queryKw) && string.Equals(queryKw, formId, StringComparison.OrdinalIgnoreCase))
+            {
+                return AppConstants.Colors.ActiveNav;
+            }
+        }
+        return AppConstants.Colors.Accent;
+    }
+}
+
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -10,7 +52,6 @@
     <title>@ViewData[AppConstants.Keys.Title] - @AppConstants.Texts.CompanyName</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    @* Upewnij się, że masz ten plik lub przenieś style do site.css *@
     <link rel="stylesheet" href="~/css/bootstrap_colors.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -33,34 +74,6 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
 
-    @{
-        // Funkcja pomocnicza do podświetlania aktywnego przycisku w menu
-        string GetButtonColor(string controller, string action, string? id = null)
-        {
-            var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
-            var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
-
-            // Sprawdzamy parametry z URL (QueryString dla 'kw' i 'id')
-            var queryKw = Context.Request.Query["kw"].ToString();
-
-            bool isControllerMatch = string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase);
-            bool isActionMatch = string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
-
-            if (isControllerMatch && isActionMatch)
-            {
-                // Jeśli id jest nullem (np. Home/Index), wystarczy zgodność kontrolera i akcji
-                if (id == null) return AppConstants.Colors.ActiveNav;
-
-                // Jeśli id jest podane (np. dla ankiet), sprawdzamy czy parametr 'kw' w URL pasuje do id formularza
-                if (!string.IsNullOrEmpty(queryKw) && string.Equals(queryKw, id, StringComparison.OrdinalIgnoreCase))
-                {
-                    return AppConstants.Colors.ActiveNav;
-                }
-            }
-            return AppConstants.Colors.Accent;
-        }
-    }
-
     <div class="d-flex flex-grow-1 w-100" style="min-height: 100vh;">
 
         @* --- SIDEBAR (PASEK BOCZNY) --- *@
@@ -78,9 +91,11 @@
                     <div class="nav nav-pills flex-column gap-3 w-75">
 
                         @* Link: Lista ankiet (Home) *@
+                        @* ZMIANA: Używamy asp-route-visitorId *@
                         <a class="nav-link text-white text-center shadow-sm"
                            asp-controller="@AppConstants.Routing.HomeController"
                            asp-action="@AppConstants.Routing.ActionIndex"
+                           asp-route-visitorId="@currentVisitorId"
                            style="background-color: @GetButtonColor(AppConstants.Routing.HomeController, AppConstants.Routing.ActionIndex);">
                             @AppConstants.Texts.Layout.Questionnaires
                         </a>
@@ -90,12 +105,12 @@
                         {
                             foreach (var form in _context.Forms.Where(f => f.IsActive).ToList())
                             {
-                                // --- POPRAWIONY LINK (używa kw i id) ---
+                                @* ZMIANA: Używamy asp-route-visitorId *@
                                 <a class="nav-link text-white text-center shadow-sm"
                                    asp-controller="@AppConstants.Routing.QuestionnaireController"
                                    asp-action="@AppConstants.Routing.ActionFill"
                                    asp-route-kw="@form.Id"
-                                   asp-route-id="000000"
+                                   asp-route-visitorId="@currentVisitorId"
                                    style="background-color: @GetButtonColor(AppConstants.Routing.QuestionnaireController, AppConstants.Routing.ActionFill, form.Id.ToString());">
                                     @form.Title
                                 </a>
@@ -103,9 +118,11 @@
                         }
 
                         @* Link: Kontakt *@
+                        @* ZMIANA: Używamy asp-route-visitorId *@
                         <a class="nav-link text-white text-center shadow-sm"
                            asp-controller="@AppConstants.Routing.HomeController"
                            asp-action="@AppConstants.Routing.ActionContact"
+                           asp-route-visitorId="@currentVisitorId"
                            style="background-color: @GetButtonColor(AppConstants.Routing.HomeController, AppConstants.Routing.ActionContact);">
                             @AppConstants.Texts.Layout.Contact
                         </a>
@@ -184,8 +201,11 @@
             <footer class="bg-white border-top text-muted mt-auto">
                 <div class="container-fluid p-3 text-center">
                     &copy; 2026 - @AppConstants.Texts.CompanyName -
+                    @* ZMIANA: Używamy asp-route-visitorId *@
                     <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">@INeed.Helpers.AppConstants.Texts.Layout.PrivacyPolicy</a> |
                     <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">@INeed.Helpers.AppConstants.Texts.Layout.Terms</a>
+
+                    @* Linki bezpośrednie też mogą używać visitorId jeśli są generowane tag helperem, tutaj są modale JS *@
                 </div>
             </footer>
         </div>
