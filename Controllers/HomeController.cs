@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using INeed.Data;
 using INeed.Models;
-using INeed.Models.ViewModels;
 using INeed.Services;
 using INeed.Helpers;
 using System.Diagnostics;
 using System.Text;
+using INeed.Models.ViewModels;
 
 namespace INeed.Controllers
 {
@@ -33,17 +33,13 @@ namespace INeed.Controllers
             return View(forms);
         }
 
-        // Jedna uniwersalna metoda obs³uguj¹ca strony informacyjne
-        // Wywo³anie: /Home/Info/privacy lub /Home/Info/terms
+        // Metoda obs³uguj¹ca Privacy/Terms (fallback dla modali lub linków bezpoœrednich)
         public IActionResult Info(string id, string visitorId)
         {
             visitorId = AppConstants.GetVisitorId(visitorId);
             ViewBag.VisitorId = visitorId;
 
-            // Pobieramy gotowy model z AppConstants
             var model = AppConstants.GetPageContent(id);
-
-            // Jeœli model to null (czyli podano z³e id, np. "test"), przekieruj na g³ówn¹
             if (model == null)
             {
                 return RedirectToAction(nameof(Index), new { visitorId });

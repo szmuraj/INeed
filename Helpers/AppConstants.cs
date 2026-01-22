@@ -1,6 +1,6 @@
-﻿using INeed.Models;
+﻿using System.Globalization;
+using INeed.Models;
 using INeed.Models.ViewModels;
-using System.Globalization;
 
 namespace INeed.Helpers
 {
@@ -12,7 +12,6 @@ namespace INeed.Helpers
 
         public const string FillRoute = "Fill";
 
-        // NOWA KLASA: WARTOŚCI DOMYŚLNE
         public static class Defaults
         {
             public const string VisitorId = "000000";
@@ -50,10 +49,14 @@ namespace INeed.Helpers
             public const string White = "#ffffff";
             public const string TextSecondary = "#6c757d";
 
-            // Nowe kolory (nagłówek ankiety)
+            // Kolory nagłówka ankiety
             public const string TextMain = "#D9D9D9";
             public const string TextHighlight = "#76FF03";
             public const string BorderTransparent = "rgba(217,217,217,0.1)";
+
+            // Kolory inputów (JS)
+            public const string InputBackgroundActive = "#f0f8ff";
+            public const string BorderDefault = "#dee2e6";
 
             // Kolory kategorii
             public const string Achievement = "#76FF03";
@@ -84,54 +87,25 @@ namespace INeed.Helpers
         // 2. MECHANIZM TŁUMACZEŃ
         // =========================================================
 
-        // Sprawdza aktualną kulturę wątku (ustawioną przez Cookie/Middleware)
         private static bool IsEn => CultureInfo.CurrentUICulture.Name.StartsWith("en");
 
-        // Zwraca odpowiedni zestaw tekstów w zależności od języka
         public static TextResources Texts => IsEn ? AppConstantsEN.Get() : AppConstantsPL.Get();
 
-
         // =========================================================
-        // 3. FABRYKA TREŚCI (NOWE)
-        // =========================================================
-        
-        public static InfoPageVm? GetPageContent(string pageId)
-        {
-            var txt = Texts;
-
-            return pageId?.ToLower() switch
-            {
-                "privacy" => new InfoPageVm
-                {
-                    Title = txt.Layout.PrivacyPolicy,
-                    Subtitle = txt.Layout.CookieHeader,
-                    HtmlContent = txt.PolicyContent.PrivacyAndCookies
-                },
-
-                "terms" => new InfoPageVm
-                {
-                    Title = txt.Layout.Terms,
-                    Subtitle = txt.CompanyName,
-                    HtmlContent = txt.PolicyContent.Terms
-                },
-
-                _ => null // Nieznana strona
-            };
-        }
-
-        // =========================================================
-        // 4. METODY POMOCNICZE (DRY)
+        // 3. METODY POMOCNICZE (DRY & SCALABILITY)
         // =========================================================
 
+        /// <summary>
+        /// Zwraca podany identyfikator lub domyślny ("000000") jeśli podany jest pusty/null.
+        /// </summary>
         public static string GetVisitorId(string? visitorId)
         {
             return string.IsNullOrEmpty(visitorId) ? Defaults.VisitorId : visitorId;
         }
 
-        // =========================================================
-        // 5. HELPERY TREŚCI (SCALABILITY)
-        // =========================================================
-
+        /// <summary>
+        /// Wybiera treść w zależności od języka (PL/EN).
+        /// </summary>
         public static string SelectContent(string defaultContent, string? enContent)
         {
             if (IsEn && !string.IsNullOrEmpty(enContent))
@@ -141,22 +115,45 @@ namespace INeed.Helpers
             return defaultContent;
         }
 
+        /// <summary>
+        /// Sprawdza dopasowanie kategorii w wielu językach.
+        /// </summary>
         public static bool IsCategoryMatch(Category cat, string key)
         {
             if (cat == null || string.IsNullOrWhiteSpace(key)) return false;
-
             var k = key.Trim();
 
-            // 1. Sprawdź PL (Default)
+            // Sprawdź PL (Default)
             if (cat.Name.Trim().Equals(k, StringComparison.OrdinalIgnoreCase)) return true;
 
-            // 2. Sprawdź EN
+            // Sprawdź EN
             if (cat.NameEN != null && cat.NameEN.Trim().Equals(k, StringComparison.OrdinalIgnoreCase)) return true;
 
-            // 3. W przyszłości:
-            // if (cat.NameDE != null && cat.NameDE.Trim().Equals(k, StringComparison.OrdinalIgnoreCase)) return true;
-
             return false;
+        }
+
+        /// <summary>
+        /// Fabryka modeli dla stron informacyjnych (Privacy/Terms).
+        /// </summary>
+        public static InfoPageVm? GetPageContent(string pageId)
+        {
+            var txt = Texts;
+            return pageId?.ToLower() switch
+            {
+                "privacy" => new InfoPageVm
+                {
+                    Title = txt.Layout.PrivacyPolicy,
+                    Subtitle = txt.Layout.CookieHeader,
+                    HtmlContent = txt.PolicyContent.PrivacyAndCookies
+                },
+                "terms" => new InfoPageVm
+                {
+                    Title = txt.Layout.Terms,
+                    Subtitle = txt.CompanyName,
+                    HtmlContent = txt.PolicyContent.Terms
+                },
+                _ => null
+            };
         }
     }
 }

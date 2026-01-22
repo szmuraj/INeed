@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using INeed.Data;
@@ -81,8 +80,6 @@ namespace INeed.Controllers
             {
                 var categoryDef = dbCategories.FirstOrDefault(c => AppConstants.IsCategoryMatch(c, group.Key));
 
-                // ZABEZPIECZENIE: Jeśli kategoria nie została znaleziona w bazie, pomijamy te pytania, 
-                // aby nie psuć obliczeń (ewentualnie tutaj można dodać logowanie błędu)
                 if (categoryDef == null) continue;
 
                 int actualScore = 0;
@@ -90,28 +87,23 @@ namespace INeed.Controllers
 
                 foreach (var q in group)
                 {
-                    // Maksymalny możliwy wynik dla tego pytania
                     maxScore += q.Answers.Any() ? q.Answers.Max(a => a.Score) : 0;
 
-                    // KLUCZOWA POPRAWKA PUNKTACJI
-                    // Sprawdzamy, czy w formularzu są dane dla tego pytania
+                    // POPRAWKA PUNKTACJI: Szukamy pierwszego poprawnego GUID w danych formularza
                     string key = $"Question_{q.QuestionId}";
 
                     if (collection.ContainsKey(key))
                     {
-                        var submittedValues = collection[key]; // To może zawierać np. ["", "GUID"] lub sam "GUID"
-
-                        // Szukamy pierwszej wartości, która jest poprawnym AnswerId
+                        var submittedValues = collection[key];
                         foreach (var value in submittedValues)
                         {
                             if (!string.IsNullOrEmpty(value) && Guid.TryParse(value, out Guid selectedAnswerId))
                             {
-                                // Znaleziono ID odpowiedzi - pobieramy jej punkty
                                 var answer = q.Answers.FirstOrDefault(a => a.AnswerId == selectedAnswerId);
                                 if (answer != null)
                                 {
                                     actualScore += answer.Score;
-                                    break; // Mamy odpowiedź dla tego pytania, przerywamy szukanie duplikatów
+                                    break;
                                 }
                             }
                         }

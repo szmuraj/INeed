@@ -3,20 +3,12 @@
 @inject ApplicationDbContext _context
 
 @{
-    // Pobranie VisitorId z adresu
-    var currentVisitorId = ViewBag.VisitorId as string;
-    if (string.IsNullOrEmpty(currentVisitorId))
-    {
-        currentVisitorId = Context.Request.Query["visitorId"].ToString();
-    }
-    if (string.IsNullOrEmpty(currentVisitorId))
-    {
-        currentVisitorId = AppConstants.Defaults.VisitorId;
-    }
+    // DRY: Użycie helpera GetVisitorId
+    var currentVisitorId = AppConstants.GetVisitorId(ViewBag.VisitorId as string ?? Context.Request.Query["visitorId"].ToString());
 
-    // Funkcja kolorowania przycisków w sidebarze
     string GetButtonColor(string controller, string action, string? formId = null)
     {
+        // ... (reszta funkcji GetButtonColor bez zmian) ...
         var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
         var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
         var queryKw = Context.Request.Query["kw"].ToString();

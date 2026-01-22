@@ -4,15 +4,16 @@
 @{
     var txt = AppConstants.Texts;
 
-    var isEn = CultureInfo.CurrentUICulture.Name.StartsWith("en");
-    var title = (isEn && !string.IsNullOrEmpty(Model.TitleEN)) ? Model.TitleEN : Model.Title;
+    // DRY: Helper SelectContent
+    var title = AppConstants.SelectContent(Model.Title, Model.TitleEN);
     ViewData[AppConstants.Keys.Title] = title;
 
-    var descLong = (isEn && !string.IsNullOrEmpty(Model.DecryptionLongEN)) ? Model.DecryptionLongEN : Model.DecryptionLong;
-    var descShort = (isEn && !string.IsNullOrEmpty(Model.DecryptionShortEN)) ? Model.DecryptionShortEN : Model.DecryptionShort;
+    var descLong = AppConstants.SelectContent(Model.DecryptionLong, Model.DecryptionLongEN);
+    var descShort = AppConstants.SelectContent(Model.DecryptionShort, Model.DecryptionShortEN);
     var finalDesc = !string.IsNullOrEmpty(descLong) ? descLong : descShort;
 
-    string visitorId = ViewBag.VisitorId as string ?? AppConstants.Defaults.VisitorId;
+    // DRY: Helper GetVisitorId
+    string visitorId = AppConstants.GetVisitorId(ViewBag.VisitorId as string);
 }
 
 <div class="container-fluid py-4">
@@ -69,7 +70,7 @@
                                 <div class="card-body p-4">
                                     <h5 class="fw-bold mb-4 text-dark">
                                         <span class="badge bg-secondary me-2">@question.Number</span>
-                                        @(isEn && !string.IsNullOrEmpty(question.QueryEN) ? question.QueryEN : question.Query)
+                                        @AppConstants.SelectContent(question.Query, question.QueryEN)
                                     </h5>
 
                                     @* WERSJA DESKTOP *@
@@ -81,7 +82,7 @@
                                                 <label class="btn text-white fw-bold w-100 shadow-sm d-flex align-items-center justify-content-center"
                                                        for="Answer_@answer.AnswerId"
                                                        style="background-color: @answer.Color; border: 1px solid @answer.Color; min-height: 60px; font-size: 0.9rem;">
-                                                    @(isEn && !string.IsNullOrEmpty(answer.ReplyEN) ? answer.ReplyEN : answer.Reply)
+                                                    @AppConstants.SelectContent(answer.Reply, answer.ReplyEN)
                                                 </label>
                                             </div>
                                         }
@@ -97,7 +98,7 @@
                                                 @foreach (var answer in question.Answers.OrderBy(a => a.Order))
                                                 {
                                                     <option value="@answer.AnswerId">
-                                                        @(isEn && !string.IsNullOrEmpty(answer.ReplyEN) ? answer.ReplyEN : answer.Reply)
+                                                        @AppConstants.SelectContent(answer.Reply, answer.ReplyEN)
                                                     </option>
                                                 }
                                             </select>
@@ -142,26 +143,32 @@
             const selects = document.querySelectorAll('select.mobile-select');
             selects.forEach(select => {
                 const updateStyle = () => {
+                    // Wstrzykiwanie stałych z C#
+                    const colorActive = '@AppConstants.Colors.ActiveNav';
+                    const colorBorderDefault = '@AppConstants.Colors.BorderDefault';
+                    const colorBgActive = '@AppConstants.Colors.InputBackgroundActive';
+                    const colorBgDefault = '@AppConstants.Colors.White';
+
                     const container = select.closest('.input-group');
                     const icon = container.querySelector('.status-icon');
                     const addon = container.querySelector('.input-group-text');
 
                     if (select.value) {
-                        select.style.borderColor = '@AppConstants.Colors.ActiveNav';
+                        select.style.borderColor = colorActive;
                         select.style.borderWidth = '2px';
-                        select.style.backgroundColor = '#f0f8ff';
+                        select.style.backgroundColor = colorBgActive;
                         select.classList.add('fw-bold');
-                        addon.style.borderColor = '@AppConstants.Colors.ActiveNav';
+                        addon.style.borderColor = colorActive;
                         addon.style.borderWidth = '2px';
                         addon.style.borderLeft = '0';
                         icon.className = 'bi bi-check-circle-fill status-icon fs-4';
-                        icon.style.color = '@AppConstants.Colors.ActiveNav';
+                        icon.style.color = colorActive;
                     } else {
-                        select.style.borderColor = '#dee2e6';
+                        select.style.borderColor = colorBorderDefault;
                         select.style.borderWidth = '1px';
-                        select.style.backgroundColor = '#fff';
+                        select.style.backgroundColor = colorBgDefault;
                         select.classList.remove('fw-bold');
-                        addon.style.borderColor = '#dee2e6';
+                        addon.style.borderColor = colorBorderDefault;
                         addon.style.borderWidth = '1px';
                         icon.className = 'bi bi-exclamation-circle-fill text-danger status-icon fs-4';
                         icon.style.color = '';
@@ -242,7 +249,6 @@
                         alert(@Json.Serialize(txt.Fill.AlertAll));
                         return;
                     }
-                    // ZMIANA: Usunięto blokowanie inputów, które powodowało zerowy wynik
                 });
             }
 
