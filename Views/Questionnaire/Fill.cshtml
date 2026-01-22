@@ -9,7 +9,6 @@
     var descLong = (isEn && !string.IsNullOrEmpty(Model.DecryptionLongEN)) ? Model.DecryptionLongEN : Model.DecryptionLong;
     var descShort = (isEn && !string.IsNullOrEmpty(Model.DecryptionShortEN)) ? Model.DecryptionShortEN : Model.DecryptionShort;
     var finalDesc = !string.IsNullOrEmpty(descLong) ? descLong : descShort;
-
     string visitorId = ViewBag.VisitorId as string ?? "000000";
 }
 
@@ -189,7 +188,7 @@
 <style>
     .btn-check:checked + .btn {
         box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.5) !important;
-        transform: scale(1.05);
+        /* ZMIANA: Usunięto transform: scale(1.05); aby przycisk nie zmieniał rozmiaru */
         z-index: 10;
         border-color: @AppConstants.Colors.Black !important;
         filter: brightness(110%);
