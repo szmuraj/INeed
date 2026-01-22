@@ -3,27 +3,22 @@
 @inject ApplicationDbContext _context
 
 @{
-    // --- LOGIKA UTRZYMANIA VISITOR ID ---
-    // Pobieramy ID z ViewBag lub z QueryString ("visitorId")
+    // Pobranie VisitorId z adresu
     var currentVisitorId = ViewBag.VisitorId as string;
     if (string.IsNullOrEmpty(currentVisitorId))
     {
-        // Sprawdzamy parametr visitorId (zgodny z nowym nazewnictwem)
         currentVisitorId = Context.Request.Query["visitorId"].ToString();
     }
-    // Domyślna wartość, jeśli brak ID
     if (string.IsNullOrEmpty(currentVisitorId))
     {
         currentVisitorId = "000000";
     }
 
-    // Funkcja pomocnicza do podświetlania aktywnego przycisku w menu
+    // Funkcja kolorowania przycisków w sidebarze
     string GetButtonColor(string controller, string action, string? formId = null)
     {
         var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
         var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
-
-        // Sprawdzamy parametry z URL (QueryString dla 'kw')
         var queryKw = Context.Request.Query["kw"].ToString();
 
         bool isControllerMatch = string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase);
@@ -31,10 +26,7 @@
 
         if (isControllerMatch && isActionMatch)
         {
-            // Jeśli formId jest nullem (np. Home/Index), wystarczy zgodność kontrolera i akcji
             if (formId == null) return AppConstants.Colors.ActiveNav;
-
-            // Jeśli formId jest podane (dla ankiet), sprawdzamy czy parametr 'kw' w URL pasuje do id formularza
             if (!string.IsNullOrEmpty(queryKw) && string.Equals(queryKw, formId, StringComparison.OrdinalIgnoreCase))
             {
                 return AppConstants.Colors.ActiveNav;
@@ -74,10 +66,39 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
 
+    @* --- PASEK MOBILNY (Widoczny tylko na telefonach/tabletach < 992px) --- *@
+    <div class="d-lg-none w-100 p-2 shadow-sm border-bottom border-secondary border-opacity-25"
+         style="background-color: @AppConstants.Colors.Primary; flex-shrink: 0; z-index: 1000;">
+        <div class="d-flex justify-content-around align-items-center">
+
+            @* Przycisk: Strona główna *@
+            <a class="d-flex flex-column align-items-center text-white text-decoration-none py-1 px-3 rounded"
+               asp-controller="@AppConstants.Routing.HomeController"
+               asp-action="@AppConstants.Routing.ActionIndex"
+               asp-route-visitorId="@currentVisitorId"
+               style="transition: background-color 0.2s;">
+                <i class="bi bi-house-door-fill fs-2 mb-1"></i>
+                <span class="small fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">@AppConstants.Texts.Layout.Home</span>
+            </a>
+
+            @* Przycisk: Kontakt *@
+            <a class="d-flex flex-column align-items-center text-white text-decoration-none py-1 px-3 rounded"
+               asp-controller="@AppConstants.Routing.HomeController"
+               asp-action="@AppConstants.Routing.ActionContact"
+               asp-route-visitorId="@currentVisitorId"
+               style="transition: background-color 0.2s;">
+                <i class="bi bi-envelope-fill fs-2 mb-1"></i>
+                <span class="small fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">@AppConstants.Texts.Layout.Contact</span>
+            </a>
+
+        </div>
+    </div>
+
+    @* --- GŁÓWNY KONTENER UKŁADU --- *@
     <div class="d-flex flex-grow-1 w-100" style="min-height: 100vh;">
 
-        @* --- SIDEBAR (PASEK BOCZNY) --- *@
-        <nav class="sidebar-container d-flex flex-column p-3 text-white flex-shrink-0" style="width: 275px;">
+        @* --- SIDEBAR (Widoczny tylko na Desktopach >= 992px - klasa d-none d-lg-flex) --- *@
+        <nav class="sidebar-container d-none d-lg-flex flex-column p-3 text-white flex-shrink-0" style="width: 275px;">
             <div class="mb-5 text-center">
                 <img src="@Url.Content(AppConstants.Assets.LogoPath)" alt="@AppConstants.Texts.CompanyName" class="img-fluid" style="max-width: 140px; margin-bottom: 10px;">
                 <p class="small text-white-50" style="font-size: 0.8rem;">@AppConstants.Texts.Slogan</p>
@@ -90,8 +111,7 @@
                 <div class="d-flex flex-column align-items-center w-100 flex-grow-1 pt-4 pb-4">
                     <div class="nav nav-pills flex-column gap-3 w-75">
 
-                        @* Link: Lista ankiet (Home) *@
-                        @* ZMIANA: Używamy asp-route-visitorId *@
+                        @* Link: Lista ankiet *@
                         <a class="nav-link text-white text-center shadow-sm"
                            asp-controller="@AppConstants.Routing.HomeController"
                            asp-action="@AppConstants.Routing.ActionIndex"
@@ -100,12 +120,11 @@
                             @AppConstants.Texts.Layout.Questionnaires
                         </a>
 
-                        @* Pętla generująca linki do aktywnych formularzy *@
+                        @* Pętla ankiet *@
                         @if (_context.Forms != null)
                         {
                             foreach (var form in _context.Forms.Where(f => f.IsActive).ToList())
                             {
-                                @* ZMIANA: Używamy asp-route-visitorId *@
                                 <a class="nav-link text-white text-center shadow-sm"
                                    asp-controller="@AppConstants.Routing.QuestionnaireController"
                                    asp-action="@AppConstants.Routing.ActionFill"
@@ -118,7 +137,6 @@
                         }
 
                         @* Link: Kontakt *@
-                        @* ZMIANA: Używamy asp-route-visitorId *@
                         <a class="nav-link text-white text-center shadow-sm"
                            asp-controller="@AppConstants.Routing.HomeController"
                            asp-action="@AppConstants.Routing.ActionContact"
@@ -128,7 +146,6 @@
                         </a>
                     </div>
                 </div>
-
                 <div style="height: 30px; width: 100%; background: linear-gradient(to top, @AppConstants.Colors.White 0%, @AppConstants.Colors.Accent 25%, @AppConstants.Colors.Accent 100%);"></div>
             </div>
         </nav>
@@ -138,40 +155,24 @@
 
             @* HEADER (Flagi, Logo) *@
             <header class="bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
-
-                @* Wybór języka *@
                 <form asp-controller="@AppConstants.Routing.CultureController" asp-action="@AppConstants.Routing.ActionSetCulture"
                       asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
                       method="post" class="d-flex gap-3 align-items-center ms-3">
-
                     <button type="submit" name="culture" value="pl-PL" class="btn p-0 border-0 bg-transparent" title="Polski">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="24" viewBox="0 0 640 480" class="rounded shadow-sm flag-hover">
-                            <g fill-rule="evenodd">
-                                <path fill="#fff" d="M640 480H0V0h640z" />
-                                <path fill="#dc143c" d="M640 480H0V240h640z" />
-                            </g>
-                            <rect width="640" height="480" fill="none" stroke="#e0e0e0" stroke-width="2" />
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="24" viewBox="0 0 640 480" class="rounded shadow-sm flag-hover"><g fill-rule="evenodd"><path fill="#fff" d="M640 480H0V0h640z" /><path fill="#dc143c" d="M640 480H0V240h640z" /></g><rect width="640" height="480" fill="none" stroke="#e0e0e0" stroke-width="2" /></svg>
                     </button>
-
                     <button type="submit" name="culture" value="en-US" class="btn p-0 border-0 bg-transparent" title="English">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="24" viewBox="0 0 640 480" class="rounded shadow-sm flag-hover">
-                            <path fill="#bd3d44" d="M0 0h640v480H0" />
-                            <path stroke="#fff" stroke-width="37" d="M0 553v-553h640" />
-                            <path fill="#fff" d="M0 37l640 405m0-405L0 442" />
-                            <path stroke="#192f5d" stroke-width="24" d="M0 553v-553h640M0 37l640 405m0-405L0 442" />
-                            <rect width="640" height="480" fill="#bf0a30" />
-                            <path fill="#fff" d="M0 40h640v40H0zM0 120h640v40H0zM0 200h640v40H0zM0 280h640v40H0zM0 360h640v40H0zM0 440h640v40H0z" />
-                            <rect width="260" height="230" fill="#002868" />
-                            <text x="15" y="150" font-size="180" fill="white">★</text>
-                            <rect width="640" height="480" fill="none" stroke="#e0e0e0" stroke-width="2" />
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="24" viewBox="0 0 640 480" class="rounded shadow-sm flag-hover"><path fill="#bd3d44" d="M0 0h640v480H0" /><path stroke="#fff" stroke-width="37" d="M0 553v-553h640" /><path fill="#fff" d="M0 37l640 405m0-405L0 442" /><path stroke="#192f5d" stroke-width="24" d="M0 553v-553h640M0 37l640 405m0-405L0 442" /><rect width="640" height="480" fill="#bf0a30" /><path fill="#fff" d="M0 40h640v40H0zM0 120h640v40H0zM0 200h640v40H0zM0 280h640v40H0zM0 360h640v40H0zM0 440h640v40H0z" /><rect width="260" height="230" fill="#002868" /><text x="15" y="150" font-size="180" fill="white">★</text><rect width="640" height="480" fill="none" stroke="#e0e0e0" stroke-width="2" /></svg>
                     </button>
                 </form>
 
                 <div class="d-flex flex-column align-items-end">
                     <div><img src="@Url.Content(AppConstants.Assets.NamePath)" alt="Logo" style="height: 50px; width: auto; object-fit: contain;"></div>
-                    <span class="mt-1" style="font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.875rem; line-height: 1.2; color: @AppConstants.Colors.Accent;">
+                    <span class="mt-1 d-none d-sm-block" style="font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.875rem; line-height: 1.2; color: @AppConstants.Colors.Accent;">
+                        @AppConstants.Texts.Slogan
+                    </span>
+                    @* Slogan na mobile (mniejszy) *@
+                    <span class="mt-1 d-block d-sm-none" style="font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.2rem; line-height: 1.2; color: @AppConstants.Colors.Accent;">
                         @AppConstants.Texts.Slogan
                     </span>
                 </div>
@@ -181,16 +182,12 @@
                 <div class="container-fluid pt-4 p-4 h-100">
                     <div class="row h-100">
                         <div class="col-12">
-                            @* Kontener na treść *@
                             <div class="d-flex flex-column justify-content-between text-white shadow-sm h-100"
                                  style="background-color: @AppConstants.Colors.Primary; min-height: 600px; border-radius: 15px; overflow: hidden;">
-
                                 <div style="height: 30px; width: 100%; background: linear-gradient(to bottom, @AppConstants.Colors.White 0%, @AppConstants.Colors.Accent 25%, @AppConstants.Colors.Accent 100%); flex-shrink: 0;"></div>
-
                                 <div class="w-100 flex-grow-1 p-4" style="color: white; overflow: auto;">
                                     @RenderBody()
                                 </div>
-
                                 <div style="height: 30px; width: 100%; background: linear-gradient(to top, @AppConstants.Colors.White 0%, @AppConstants.Colors.Accent 25%, @AppConstants.Colors.Accent 100%); flex-shrink: 0;"></div>
                             </div>
                         </div>
@@ -201,11 +198,8 @@
             <footer class="bg-white border-top text-muted mt-auto">
                 <div class="container-fluid p-3 text-center">
                     &copy; 2026 - @AppConstants.Texts.CompanyName -
-                    @* ZMIANA: Używamy asp-route-visitorId *@
                     <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">@INeed.Helpers.AppConstants.Texts.Layout.PrivacyPolicy</a> |
                     <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">@INeed.Helpers.AppConstants.Texts.Layout.Terms</a>
-
-                    @* Linki bezpośrednie też mogą używać visitorId jeśli są generowane tag helperem, tutaj są modale JS *@
                 </div>
             </footer>
         </div>

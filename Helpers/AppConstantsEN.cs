@@ -11,8 +11,6 @@
 
                 Layout = new LayoutResources
                 {
-                    Home = "Home",
-                    Privacy = "Privacy",
                     Questionnaires = "Questionnaires",
                     Contact = "Contact",
                     PrivacyPolicy = "Privacy Policy",
@@ -29,9 +27,7 @@
                     EmailPlaceholder = "Email address",
                     FirstName = "First Name",
                     Woman = "Woman",
-                    Man = "Man",
-                    Category = "Category",
-                    ResultScore = "Score"
+                    Man = "Man"
                 },
 
                 Buttons = new ButtonResources
@@ -46,10 +42,72 @@
                     Start = "Start"
                 },
 
+                // --- TRANSLATED LEGAL CONTENT ---
                 PolicyContent = new PolicyContentResources
                 {
-                    PrivacyAndCookies = "Privacy Policy content...",
-                    Terms = "Terms content..."
+                    PrivacyAndCookies = @"
+                        <h4 class='fw-bold'>PRIVACY POLICY INeed sp. z o.o.</h4>
+                        <p><strong>1. General Information</strong><br>
+                        The Personal Data Controller is: <strong>INeed sp. z o.o.</strong><br>
+                        Registered office: Al. Kilińskiego 12, 09-402 Płock, Poland<br>
+                        NIP: 123-456-78-90 | KRS: 0001234567 | REGON: 123456789<br>
+                        E-mail: bok@ineed.com | Phone: 661 121 122<br>
+                        This Privacy Policy sets out the rules for the processing of Personal Data by INeed sp. z o.o. in accordance with the Regulation of the European Parliament and of the Council (EU) 2016/679 of 27 April 2016 (GDPR).</p>
+
+                        <p><strong>2. Purposes and legal basis of processing</strong><br>
+                        Data is processed for the purpose of:
+                        <ul>
+                            <li>Providing electronic services (e.g., sending survey results) – Art. 6(1)(b) GDPR.</li>
+                            <li>Communication with Users (responding to inquiries) – Art. 6(1)(f) GDPR.</li>
+                            <li>Marketing (Newsletter) – Art. 6(1)(a) GDPR (consent).</li>
+                            <li>Analytics and service security – Art. 6(1)(f) GDPR.</li>
+                        </ul></p>
+
+                        <p><strong>3. Data Recipients</strong><br>
+                        Data recipients may be entities providing services to the Controller (e.g., hosting, IT support) based on data processing agreements.</p>
+
+                        <p><strong>4. Rights of Data Subjects</strong><br>
+                        You have the right to access your data, rectify it, delete it, restrict processing, transfer it, object, and withdraw consent at any time. To exercise your rights, please contact: bok@ineed.com.</p>
+
+                        <p><strong>5. Profiling</strong><br>
+                        Survey data is subject to automated analysis to generate a result. This does not produce legal effects concerning the User.</p>
+
+                        <hr class='my-4'>
+
+                        <h4 class='fw-bold'>COOKIES POLICY</h4>
+                        <p><strong>1. Preliminary Information</strong><br>
+                        The ineed.com website uses cookies to ensure proper operation, analytics, and marketing.</p>
+
+                        <p><strong>2. Types of Cookies</strong><br>
+                        <ul>
+                            <li><strong>Necessary:</strong> Required for the survey to work (saving progress).</li>
+                            <li><strong>Analytical:</strong> Anonymous statistics (e.g., Google Analytics) helping to improve the service.</li>
+                        </ul></p>
+
+                        <p><strong>3. Management</strong><br>
+                        The User can change cookie settings in their web browser or via the cookie banner on the site at any time. Disabling necessary cookies may prevent the completion of the survey.<br>
+                        <strong>Contact:</strong> regarding cookies, please contact: bok@ineed.com.</p>
+                    ",
+
+                    Terms = @"
+                        <h4 class='fw-bold'>TERMS OF SERVICE INeed</h4>
+                        
+                        <p><strong>I. General Provisions</strong><br>
+                        These Terms specify the rules for using the Needs Assessment Questionnaire service, operated by INeed sp. z o.o. (Al. Kilińskiego 12, 09-402 Płock, Poland).<br>
+                        The service is free of charge, and the service provided is strictly educational and advisory in nature.</p>
+
+                        <p><strong>II. Intellectual Property</strong><br>
+                        The application is based on the work of Anna Paszkowska-Rogacz. All rights to the code and brand belong to the Administrator.</p>
+
+                        <p><strong>III. Disclaimer</strong><br>
+                        The results generated by the survey do not constitute a psychological or medical diagnosis. The application serves only to support personal development. The Administrator is not responsible for life or career decisions made by the User based on the result.</p>
+
+                        <p><strong>IV. Rules of Use</strong><br>
+                        The User is obliged to use the service in accordance with the law. It is forbidden to provide unlawful content.</p>
+
+                        <p><strong>V. Data Protection and Newsletter</strong><br>
+                        Data processing rules are defined in the Privacy Policy. Subscription to the Newsletter requires voluntary consent (Double Opt-in).</p>
+                    "
                 },
 
                 Contact = new ContactResources
@@ -99,8 +157,6 @@
                     YourResults = "Your results:",
                     EmailSentSuccess = "The results have been sent to the provided email address.",
                     EmailSentError = "An error occurred while sending the email.",
-
-                    // NOWE
                     CombinedResultsTitle = "Your Combined Results",
                     ResultsForIdBody = "Below are all survey results associated with identifier",
                     UnknownSurvey = "Unknown Survey",
