@@ -27,6 +27,10 @@
         public string CookieHeader { get; set; }
         public string CookieBody { get; set; }
         public string CookieButton { get; set; }
+        public string Slogan { get; set; }       // <--- DODAJ TO
+        public string NavSurveys { get; set; }   // <--- DODAJ TO
+        public string NavContact { get; set; }   // <--- DODAJ TO
+        public string FooterRights { get; set; }
     }
 
     public class LabelResources
@@ -58,6 +62,7 @@
         public string SendResults { get; set; }
         public string Start { get; set; }
         public string RetakeTest { get; set; }
+        public string StartTest { get; set; }
     }
 
     public class PolicyContentResources

@@ -55,9 +55,7 @@
                     var descId = "cat-desc-" + i;
 
                     // PRZYGOTOWANIE TEKSTU DLA LEKTORA (C#)
-                    // Dzięki temu mamy czysty tekst bez HTML, który wrzucimy w aria-label
                     string fullTextForSpeech = "";
-
                     if (showBoth)
                     {
                         fullTextForSpeech = $"{AppConstants.Texts.Result.NormsFemale}. STEN: {cat.StenFemale}. {cat.AdviceFemale}. " +
@@ -98,12 +96,6 @@
                         </div>
 
                         @* --- KONTENER OPISÓW (CEL ENTERA) --- *@
-                        @* KLUCZOWE ZMIANY DLA WCAG:
-                           1. tabindex="-1": Element może przyjąć focus programowo.
-                           2. role="region": Informuje czytnik, że to ważna sekcja.
-                           3. aria-label="@fullTextForSpeech": Wymusza przeczytanie TEGO tekstu od razu po otrzymaniu fokusu.
-                           4. style="outline: none": Ukrywamy domyślną ramkę fokusu (dla estetyki), ale dodamy własną w CSS.
-                        *@
                         <div id="@descId"
                              class="description-wrapper mt-1 rounded p-2"
                              tabindex="-1"
@@ -114,19 +106,13 @@
                             @if (showBoth)
                             {
                                 <div class="row g-4" aria-hidden="true">
-                                    @* aria-hidden="true" bo treść czytamy z aria-label rodzica *@
                                     <div class="col-md-6">
                                         <section class="p-4 h-100 border rounded shadow-sm"
                                                  style="background-color: @AppConstants.Colors.BgFemale; border-color: @AppConstants.Colors.BorderFemale !important;">
-
-                                            <h3 class="fw-bold h5" style="color: @AppConstants.Colors.TextFemale;">
-                                                @AppConstants.Texts.Result.NormsFemale
-                                            </h3>
+                                            <h3 class="fw-bold h5" style="color: @AppConstants.Colors.TextFemale;">@AppConstants.Texts.Result.NormsFemale</h3>
                                             <hr style="border-color: @AppConstants.Colors.TextFemale; opacity: 0.3;">
-
                                             <div class="mb-3">
-                                                <strong>STEN: @cat.StenFemale</strong>
-                                                <span class="badge bg-white text-dark border ms-2">@cat.DescFemale</span>
+                                                <strong>STEN: @cat.StenFemale</strong> <span class="badge bg-white text-dark border ms-2">@cat.DescFemale</span>
                                             </div>
                                             <p class="mb-0 small text-muted" style="line-height: 1.6;">@cat.AdviceFemale</p>
                                         </section>
@@ -134,15 +120,10 @@
                                     <div class="col-md-6">
                                         <section class="p-4 h-100 border rounded shadow-sm"
                                                  style="background-color: @AppConstants.Colors.BgMale; border-color: @AppConstants.Colors.BorderMale !important;">
-
-                                            <h3 class="fw-bold h5" style="color: @AppConstants.Colors.TextMale;">
-                                                @AppConstants.Texts.Result.NormsMale
-                                            </h3>
+                                            <h3 class="fw-bold h5" style="color: @AppConstants.Colors.TextMale;">@AppConstants.Texts.Result.NormsMale</h3>
                                             <hr style="border-color: @AppConstants.Colors.TextMale; opacity: 0.3;">
-
                                             <div class="mb-3">
-                                                <strong>STEN: @cat.StenMale</strong>
-                                                <span class="badge bg-white text-dark border ms-2">@cat.DescMale</span>
+                                                <strong>STEN: @cat.StenMale</strong> <span class="badge bg-white text-dark border ms-2">@cat.DescMale</span>
                                             </div>
                                             <p class="mb-0 small text-muted" style="line-height: 1.6;">@cat.AdviceMale</p>
                                         </section>
@@ -152,7 +133,6 @@
                             else
                             {
                                 <section class="p-4 border rounded bg-light shadow-sm" aria-hidden="true">
-                                    @* aria-hidden="true" bo treść czytamy z aria-label rodzica *@
                                     <h3 class="fw-bold text-primary mb-3 h5">
                                         @AppConstants.Texts.Result.YourResultSten: @cat.StenUser
                                         <span class="badge bg-secondary ms-2 text-white" style="font-size: 0.8rem;">
@@ -195,8 +175,17 @@
 
                     <div class="mb-3 w-75">
                         <label for="resultEmail" class="visually-hidden">@AppConstants.Texts.Labels.EmailPlaceholder</label>
+
+                        @* --- ZMIANA: Instrukcja dla czytnika --- *@
+                        <span id="email-instruction" class="visually-hidden">
+                            Jeżeli chcesz by wysłać wynik twojej ankiety na maila wprowadź go teraz, naciśnij przycisk Akceptuję, a następnie przycisk wyślij.
+                        </span>
+
+                        @* Dodano aria-describedby="email-instruction" *@
                         <input type="email" id="resultEmail" name="email" class="form-control bg-white text-dark border-secondary border-opacity-25 text-center"
-                               placeholder="@AppConstants.Texts.Labels.EmailPlaceholder" required>
+                               placeholder="@AppConstants.Texts.Labels.EmailPlaceholder"
+                               aria-describedby="email-instruction"
+                               required>
                     </div>
 
                     <div class="mb-4 w-75 text-start">
@@ -240,9 +229,7 @@
             if (event.key === 'Enter') {
                 event.preventDefault();
                 const descContainer = document.getElementById(descId);
-
                 if (descContainer) {
-                    // Czekamy chwilę, aby przeglądarka i czytnik obsłużyły wciśnięcie klawisza
                     setTimeout(() => {
                         descContainer.focus();
                     }, 150);
@@ -262,7 +249,6 @@
 }
 
 <style>
-    /* Wizualne zaznaczenie nagłówka (nawigacja) */
     .category-header-focus:focus-visible {
         outline: 3px solid @AppConstants.Colors.FocusOutline !important;
         outline-offset: 4px;
@@ -270,10 +256,9 @@
         cursor: pointer;
     }
 
-    /* Wizualne zaznaczenie opisu (po wejściu Enterem) - ważne dla słabowidzących */
     .description-wrapper:focus {
         outline: 2px dashed @AppConstants.Colors.TextSecondary !important;
         outline-offset: 2px;
-        background-color: rgba(0,0,0,0.02); /* Lekkie tło dla potwierdzenia */
+        background-color: rgba(0,0,0,0.02);
     }
 </style>

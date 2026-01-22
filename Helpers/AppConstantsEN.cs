@@ -19,7 +19,11 @@
                     Terms = "Terms of Service",
                     CookieHeader = "Cookies",
                     CookieBody = "We use cookies to ensure best experience.",
-                    CookieButton = "Accept"
+                    CookieButton = "Accept",
+                    Slogan = "Because professionalism defines us",
+                    NavSurveys = "Surveys",
+                    NavContact = "Contact",
+                    FooterRights = "All rights reserved."
                 },
 
                 Labels = new LabelResources
@@ -50,7 +54,8 @@
                     SendAnswers = "Finish and see results",
                     SendResults = "Send results via email",
                     Start = "Start",
-                    RetakeTest = "Retake Test"
+                    RetakeTest = "Retake Test",
+                    StartTest = "Start Test"
                 },
 
                 PolicyContent = new PolicyContentResources

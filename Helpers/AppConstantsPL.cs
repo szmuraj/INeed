@@ -19,7 +19,11 @@
                     Terms = "Regulamin",
                     CookieHeader = "Pliki Cookies",
                     CookieBody = "Używamy plików cookies, aby zapewnić najlepszą jakość korzystania z naszej strony.",
-                    CookieButton = "Akceptuję"
+                    CookieButton = "Akceptuję",
+                    Slogan = "Bo cechuje nas profesjonalizm",
+                    NavSurveys = "Ankiety",
+                    NavContact = "Kontakt",
+                    FooterRights = "Wszelkie prawa zastrzeżone."
                 },
 
                 Labels = new LabelResources
@@ -50,7 +54,8 @@
                     SendAnswers = "Zakończ i pokaż wynik",
                     SendResults = "Wyślij wynik na e-mail",
                     Start = "Rozpocznij",
-                    RetakeTest = "Wypełnij ponownie"
+                    RetakeTest = "Wypełnij ponownie",
+                    StartTest = "Rozpocznij test"
                 },
 
                 PolicyContent = new PolicyContentResources

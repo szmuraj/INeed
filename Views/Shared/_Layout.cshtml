@@ -4,7 +4,6 @@
 
 @{
     var currentVisitorId = AppConstants.GetVisitorId(ViewBag.VisitorId as string ?? Context.Request.Query["visitorId"].ToString());
-
     string GetButtonColor(string controller, string action, string? formId = null)
     {
         // ... (reszta funkcji GetButtonColor bez zmian) ...
@@ -14,7 +13,6 @@
 
         bool isControllerMatch = string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase);
         bool isActionMatch = string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
-
         if (isControllerMatch && isActionMatch)
         {
             if (formId == null) return AppConstants.Colors.ActiveNav;
@@ -72,6 +70,9 @@
     @* --- PASEK MOBILNY --- *@
     <nav class="navbar navbar-dark d-lg-none w-100 shadow-sm border-bottom border-secondary border-opacity-25"
          style="background-color: @AppConstants.Colors.Primary; flex-shrink: 0; z-index: 1000;">
+        @* H1: Struktura dla czytnika *@
+        <h1 class="visually-hidden">Nawigacja mobilna</h1>
+
         <div class="container-fluid">
 
             <a class="navbar-brand d-flex align-items-center gap-2"
@@ -132,6 +133,9 @@
 
         @* --- SIDEBAR --- *@
         <nav class="sidebar-container d-none d-lg-flex flex-column p-3 text-white flex-shrink-0" style="width: 275px;">
+            @* H1: Struktura dla czytnika *@
+            <h1 class="visually-hidden">Pasek boczny nawigacji</h1>
+
             <div class="mb-5 text-center">
                 <img src="@Url.Content(AppConstants.Assets.LogoPath)" alt="@AppConstants.Texts.CompanyName" class="img-fluid" style="max-width: 140px; margin-bottom: 10px;">
                 <p class="small text-white-50" style="font-size: 0.8rem;">@AppConstants.Texts.Slogan</p>
@@ -144,36 +148,47 @@
                 <div class="d-flex flex-column align-items-center w-100 flex-grow-1 pt-4 pb-4">
                     <div class="nav nav-pills flex-column gap-3 w-75">
 
-                        <a class="nav-link text-white text-center shadow-sm"
-                           asp-controller="@AppConstants.Routing.HomeController"
-                           asp-action="@AppConstants.Routing.ActionIndex"
-                           asp-route-visitorId="@currentVisitorId"
-                           style="background-color: @GetButtonColor(AppConstants.Routing.HomeController, AppConstants.Routing.ActionIndex);">
-                            @AppConstants.Texts.Layout.Questionnaires
-                        </a>
+                        @* WYMAGANIE: H2 dla przycisku ANKIETY + Focus na Main *@
+                        <h2 class="w-100 m-0 p-0 fs-6 fw-normal">
+                            <a class="nav-link text-white text-center shadow-sm"
+                               asp-controller="@AppConstants.Routing.HomeController"
+                               asp-action="@AppConstants.Routing.ActionIndex"
+                               asp-route-visitorId="@currentVisitorId"
+                               asp-fragment="main-content"
+                               style="background-color: @GetButtonColor(AppConstants.Routing.HomeController, AppConstants.Routing.ActionIndex);">
+                                @AppConstants.Texts.Layout.Questionnaires
+                            </a>
+                        </h2>
 
                         @if (_context.Forms != null)
                         {
                             foreach (var form in _context.Forms.Where(f => f.IsActive).ToList())
                             {
-                                <a class="nav-link text-white text-center shadow-sm"
-                                   asp-controller="@AppConstants.Routing.QuestionnaireController"
-                                   asp-action="@AppConstants.Routing.ActionFill"
-                                   asp-route-kw="@form.Id"
-                                   asp-route-visitorId="@currentVisitorId"
-                                   style="background-color: @GetButtonColor(AppConstants.Routing.QuestionnaireController, AppConstants.Routing.ActionFill, form.Id.ToString());">
-                                    @form.Title
-                                </a>
+                                @* WYMAGANIE: H2 dla przycisków formularzy *@
+                                <h2 class="w-100 m-0 p-0 fs-6 fw-normal">
+                                    <a class="nav-link text-white text-center shadow-sm"
+                                       asp-controller="@AppConstants.Routing.QuestionnaireController"
+                                       asp-action="@AppConstants.Routing.ActionFill"
+                                       asp-route-kw="@form.Id"
+                                       asp-route-visitorId="@currentVisitorId"
+                                       style="background-color: @GetButtonColor(AppConstants.Routing.QuestionnaireController, AppConstants.Routing.ActionFill, form.Id.ToString());">
+                                        @form.Title
+                                    </a>
+                                </h2>
                             }
                         }
 
-                        <a class="nav-link text-white text-center shadow-sm"
-                           asp-controller="@AppConstants.Routing.HomeController"
-                           asp-action="@AppConstants.Routing.ActionContact"
-                           asp-route-visitorId="@currentVisitorId"
-                           style="background-color: @GetButtonColor(AppConstants.Routing.HomeController, AppConstants.Routing.ActionContact);">
-                            @AppConstants.Texts.Layout.Contact
-                        </a>
+                        @* WYMAGANIE: H2 dla przycisku KONTAKT *@
+                        <h2 class="w-100 m-0 p-0 fs-6 fw-normal">
+                            <a class="nav-link text-white text-center shadow-sm"
+                               asp-controller="@AppConstants.Routing.HomeController"
+                               asp-action="@AppConstants.Routing.ActionContact"
+                               asp-route-visitorId="@currentVisitorId"
+                               style="background-color: @GetButtonColor(AppConstants.Routing.HomeController, AppConstants.Routing.ActionContact);">
+                                @AppConstants.Texts.Layout.Contact
+                            </a>
+                        </h2>
+
                     </div>
                 </div>
                 <div style="height: 30px; width: 100%; background: linear-gradient(to top, @AppConstants.Colors.White 0%, @AppConstants.Colors.Accent 25%, @AppConstants.Colors.Accent 100%);"></div>
@@ -185,29 +200,46 @@
 
             @* HEADER *@
             <header class="bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
-                <form asp-controller="@AppConstants.Routing.CultureController" asp-action="@AppConstants.Routing.ActionSetCulture"
-                      asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
-                      method="post" class="d-flex gap-3 align-items-center ms-3">
-                    <button type="submit" name="culture" value="pl-PL" class="btn p-0 border-0 bg-transparent" title="Polski">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="24" viewBox="0 0 640 480" class="rounded shadow-sm flag-hover"><g fill-rule="evenodd"><path fill="#fff" d="M640 480H0V0h640z" /><path fill="#dc143c" d="M640 480H0V240h640z" /></g><rect width="640" height="480" fill="none" stroke="#e0e0e0" stroke-width="2" /></svg>
-                    </button>
-                    <button type="submit" name="culture" value="en-US" class="btn p-0 border-0 bg-transparent" title="English">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="24" viewBox="0 0 640 480" class="rounded shadow-sm flag-hover"><path fill="#bd3d44" d="M0 0h640v480H0" /><path stroke="#fff" stroke-width="37" d="M0 553v-553h640" /><path fill="#fff" d="M0 37l640 405m0-405L0 442" /><path stroke="#192f5d" stroke-width="24" d="M0 553v-553h640M0 37l640 405m0-405L0 442" /><rect width="640" height="480" fill="#bf0a30" /><path fill="#fff" d="M0 40h640v40H0zM0 120h640v40H0zM0 200h640v40H0zM0 280h640v40H0zM0 360h640v40H0zM0 440h640v40H0z" /><rect width="260" height="230" fill="#002868" /><text x="15" y="150" font-size="180" fill="white">★</text><rect width="640" height="480" fill="none" stroke="#e0e0e0" stroke-width="2" /></svg>
-                    </button>
-                </form>
+                @* H1: Struktura dla czytnika *@
+                <h1 class="visually-hidden">Pasek górny</h1>
+
+                @* WYMAGANIE: H2 dla Wyboru języka (sekcja) *@
+                <section aria-labelledby="lang-heading" class="d-flex gap-3 align-items-center ms-3">
+                    <h2 id="lang-heading" class="visually-hidden">Wybór języków</h2>
+
+                    <form asp-controller="@AppConstants.Routing.CultureController" asp-action="@AppConstants.Routing.ActionSetCulture"
+                          asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                          method="post" class="d-flex gap-3 align-items-center">
+                        <button type="submit" name="culture" value="pl-PL" class="btn p-0 border-0 bg-transparent" title="Polski">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="34" height="24" viewBox="0 0 640 480" class="rounded shadow-sm flag-hover"><g fill-rule="evenodd"><path fill="#fff" d="M640 480H0V0h640z" /><path fill="#dc143c" d="M640 480H0V240h640z" /></g><rect width="640" height="480" fill="none" stroke="#e0e0e0" stroke-width="2" /></svg>
+                        </button>
+                        <button type="submit" name="culture" value="en-US" class="btn p-0 border-0 bg-transparent" title="English">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="34" height="24" viewBox="0 0 640 480" class="rounded shadow-sm flag-hover"><path fill="#bd3d44" d="M0 0h640v480H0" /><path stroke="#fff" stroke-width="37" d="M0 553v-553h640" /><path fill="#fff" d="M0 37l640 405m0-405L0 442" /><path stroke="#192f5d" stroke-width="24" d="M0 553v-553h640M0 37l640 405m0-405L0 442" /><rect width="640" height="480" fill="#bf0a30" /><path fill="#fff" d="M0 40h640v40H0zM0 120h640v40H0zM0 200h640v40H0zM0 280h640v40H0zM0 360h640v40H0zM0 440h640v40H0z" /><rect width="260" height="230" fill="#002868" /><text x="15" y="150" font-size="180" fill="white">★</text><rect width="640" height="480" fill="none" stroke="#e0e0e0" stroke-width="2" /></svg>
+                        </button>
+                    </form>
+                </section>
 
                 <div class="d-flex flex-column align-items-end">
-                    <div><img src="@Url.Content(AppConstants.Assets.NamePath)" alt="Logo" style="height: 50px; width: auto; object-fit: contain;"></div>
-                    <span class="mt-1 d-none d-sm-block" style="font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.875rem; line-height: 1.2; color: @AppConstants.Colors.Accent;">
+                    @* WYMAGANIE: H2 dla LOGO (Obrazek z nazwą) *@
+                    <h2 class="m-0 p-0 lh-1">
+                        <img src="@Url.Content(AppConstants.Assets.NamePath)" alt="Logo Nazwa" style="height: 50px; width: auto; object-fit: contain;">
+                    </h2>
+
+                    @* WYMAGANIE: H2 dla HASŁA (Slogan) *@
+                    <h2 class="mt-1 d-none d-sm-block m-0 p-0" style="font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.875rem; line-height: 1.2; color: @AppConstants.Colors.Accent;">
                         @AppConstants.Texts.Slogan
-                    </span>
-                    <span class="mt-1 d-block d-sm-none" style="font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.1rem; line-height: 1.2; color: @AppConstants.Colors.Accent;">
+                    </h2>
+                    <h2 class="mt-1 d-block d-sm-none m-0 p-0" style="font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.1rem; line-height: 1.2; color: @AppConstants.Colors.Accent;">
                         @AppConstants.Texts.Slogan
-                    </span>
+                    </h2>
                 </div>
             </header>
 
-            <main class="flex-grow-1 bg-white">
+            @* WYMAGANIE: Main content z tabindex i ID dla fokusu *@
+            <main id="main-content" class="flex-grow-1 bg-white" tabindex="-1" style="outline: none;">
+                @* H1: Struktura dla czytnika *@
+                <h1 class="visually-hidden">Treść główna</h1>
+
                 <div class="container-fluid pt-4 p-4 h-100">
                     <div class="row h-100">
                         <div class="col-12">
@@ -225,9 +257,10 @@
             </main>
 
             <footer class="bg-white border-top text-muted mt-auto">
+                @* H1: Struktura dla czytnika *@
+                <h1 class="visually-hidden">Stopka</h1>
                 <div class="container-fluid p-3 text-center">
                     &copy; 2026 - @AppConstants.Texts.CompanyName -
-                    @* PRZYWRÓCONE LINKI MODALI *@
                     <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">@AppConstants.Texts.Layout.PrivacyPolicy</a> |
                     <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">@AppConstants.Texts.Layout.Terms</a>
                 </div>
@@ -244,7 +277,6 @@
                     <h5 class="fw-bold mb-1" style="color: @AppConstants.Colors.ButtonSubmit;">@AppConstants.Texts.Layout.CookieHeader</h5>
                     <p class="mb-0 small opacity-75">
                         @AppConstants.Texts.Layout.CookieBody
-                        @* PRZYWRÓCONY LINK MODALA *@
                         <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal" class="text-white text-decoration-underline">@AppConstants.Texts.Layout.PrivacyPolicy</a>.
                     </p>
                 </div>
@@ -267,15 +299,24 @@
                 localStorage.setItem("cookieConsent", "true");
                 document.getElementById("cookieConsentContainer").style.display = "none";
             });
+
+            // SKRYPT FOKUSOWANIA: Jeśli URL ma #main-content, ustaw fokus
+            if (window.location.hash === '#main-content') {
+                const main = document.getElementById('main-content');
+                if (main) {
+                    setTimeout(() => main.focus(), 100);
+                }
+            }
         });
     </script>
 
-    @* --- MODALE (PRZYWRÓCONE) --- *@
+    @* --- MODALE --- *@
     <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="privacyModalLabel">@AppConstants.Texts.Layout.PrivacyPolicy</h5>
+                    @* WYMAGANIE: H2 dla tytułu modala *@
+                    <h2 class="modal-title h5" id="privacyModalLabel">@AppConstants.Texts.Layout.PrivacyPolicy</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
                 </div>
                 <div class="modal-body text-dark" style="text-align: left;">
@@ -292,7 +333,8 @@
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="termsModalLabel">@AppConstants.Texts.Layout.Terms</h5>
+                    @* WYMAGANIE: H2 dla tytułu modala *@
+                    <h2 class="modal-title h5" id="termsModalLabel">@AppConstants.Texts.Layout.Terms</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
                 </div>
                 <div class="modal-body text-dark" style="text-align: left;">
