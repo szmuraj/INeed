@@ -103,28 +103,29 @@
                              aria-label="@fullTextForSpeech"
                              style="outline: none;">
 
+                            @{
+                                // Definicja funkcji lokalnej dostępna dla obu bloków (if/else)
+                                void RenderGenderCard(string title, string bgColor, string borderColor, string txtColor, int stenValue, string desc, string advice, string colClass = "col-md-6")
+                                {
+                                    <div class="@colClass">
+                                        <section class="p-4 h-100 border rounded shadow-sm"
+                                                 style="background-color: @bgColor; border-color: @borderColor !important;">
+                                            <h3 class="fw-bold h5" style="color: @txtColor;">@title</h3>
+                                            <hr style="border-color: @txtColor; opacity: 0.3;">
+                                            <div class="mb-3">
+                                                <strong>STEN: @stenValue</strong>
+                                                <span class="badge bg-white text-dark border ms-2">@desc</span>
+                                            </div>
+                                            <p class="mb-0 small text-muted" style="line-height: 1.6;">@advice</p>
+                                        </section>
+                                    </div>
+                                }
+                            }
+
                             @if (showBoth)
                             {
                                 <div class="row g-4" aria-hidden="true">
                                     @{
-                                        // Definicja funkcji lokalnej do renderowania karty
-                                        void RenderGenderCard(string title, string bgColor, string borderColor, string txtColor, int sten, string desc, string advice)
-                                        {
-                                            <div class="col-md-6">
-                                                <section class="p-4 h-100 border rounded shadow-sm"
-                                                         style="background-color: @bgColor; border-color: @borderColor !important;">
-                                                    <h3 class="fw-bold h5" style="color: @txtColor;">@title</h3>
-                                                    <hr style="border-color: @txtColor; opacity: 0.3;">
-                                                    <div class="mb-3">
-                                                        <strong>STEN: @sten</strong>
-                                                        <span class="badge bg-white text-dark border ms-2">@desc</span>
-                                                    </div>
-                                                    <p class="mb-0 small text-muted" style="line-height: 1.6;">@advice</p>
-                                                </section>
-                                            </div>
-                                        }
-
-                                        // Wywołanie funkcji dla kobiet
                                         RenderGenderCard(
                                         AppConstants.Texts.Result.NormsFemale,
                                         AppConstants.Colors.BgFemale,
@@ -135,7 +136,6 @@
                                         cat.AdviceFemale
                                         );
 
-                                        // Wywołanie funkcji dla mężczyzn
                                         RenderGenderCard(
                                         AppConstants.Texts.Result.NormsMale,
                                         AppConstants.Colors.BgMale,
@@ -150,15 +150,28 @@
                             }
                             else
                             {
-                                <section class="p-4 border rounded bg-light shadow-sm" aria-hidden="true">
-                                    <h3 class="fw-bold text-primary mb-3 h5">
-                                        @AppConstants.Texts.Result.YourResultSten: @cat.StenUser
-                                        <span class="badge bg-secondary ms-2 text-white" style="font-size: 0.8rem;">
-                                            @(Model.IsMale == false ? AppConstants.Texts.Labels.Woman : AppConstants.Texts.Labels.Man)
-                                        </span>
-                                    </h3>
-                                    <p class="mb-0" style="font-size: 1.05rem; line-height: 1.6;">@cat.Advice</p>
-                                </section>
+                                // Logika wyboru kolorów i tekstów dla konkretnej płci
+                                bool isMale = Model.IsMale.Value;
+                                var title = isMale ? AppConstants.Texts.Result.NormsMale : AppConstants.Texts.Result.NormsFemale;
+                                var bg = isMale ? AppConstants.Colors.BgMale : AppConstants.Colors.BgFemale;
+                                var border = isMale ? AppConstants.Colors.BorderMale : AppConstants.Colors.BorderFemale;
+                                var txt = isMale ? AppConstants.Colors.TextMale : AppConstants.Colors.TextFemale;
+                                var desc = isMale ? cat.DescMale : cat.DescFemale;
+
+                                <div class="row justify-content-center" aria-hidden="true">
+                                    @{
+                                        RenderGenderCard(
+                                        title,
+                                        bg,
+                                        border,
+                                        txt,
+                                        cat.StenUser,
+                                        desc,
+                                        cat.Advice,
+                                        "col-md-8"
+                                        );
+                                    }
+                                </div>
                             }
                         </div>
                     </article>

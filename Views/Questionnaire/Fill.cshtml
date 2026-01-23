@@ -16,6 +16,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-10">
 
+            @* WCAG: Kontener na błędy (zamiast alert()) *@
             <div id="validation-summary" class="alert alert-danger mb-4 shadow-sm" role="alert" style="display:none; border-radius: 10px;" tabindex="-1">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i> <span id="validation-message"></span>
             </div>
@@ -200,7 +201,7 @@
                 updateStyle();
             });
 
-            // LOGIKA PAGINACJI
+            // LOGIKA PAGINACJI I FOCUSU
             const questions = document.querySelectorAll('.question-card');
             const itemsPerPage = 5;
             let currentPage = 1;
@@ -218,17 +219,11 @@
 
             if(totalPagesSpan) totalPagesSpan.innerText = totalPages;
 
-            // =========================================================
-            // POPRAWKA: BLOKADA ENTER (Zapobiega wysyłce formularza)
-            // =========================================================
+            // BLOKADA ENTER (Zapobiega wysyłce formularza)
             document.addEventListener("keydown", function(event) {
-                // Jeśli wciśnięto ENTER
                 if (event.key === "Enter") {
-                    // Ignoruj Enter jeśli jesteśmy w polu tekstowym wielowierszowym (textarea) lub na przycisku submit
                     if (event.target.tagName !== "TEXTAREA" && event.target.type !== "submit") {
-                        event.preventDefault(); // Zablokuj domyślną wysyłkę
-
-                        // Opcjonalnie: Symuluj kliknięcie "Dalej" jeśli jest widoczny
+                        event.preventDefault();
                         if(btnNext && btnNext.style.display !== 'none'){
                             btnNext.click();
                         }
@@ -241,6 +236,7 @@
                 const end = start + itemsPerPage;
                 let isValid = true;
 
+                // Ukryj błąd przy ponownej walidacji
                 if(errorSummary) errorSummary.style.display = 'none';
 
                 for (let i = start; i < end; i++) {
@@ -262,13 +258,16 @@
                 if(errorMessage) errorMessage.innerText = msg;
                 if(errorSummary) {
                     errorSummary.style.display = 'block';
-                    errorSummary.focus();
+                    errorSummary.focus(); // WCAG: Przenieś focus na błąd
+                    // Scroll do błędu
                     errorSummary.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }
 
             function showPage(page) {
+                // 1. Ukryj wszystkie
                 questions.forEach(q => q.style.display = 'none');
+                // 2. Pokaż właściwe
                 const start = (page - 1) * itemsPerPage;
                 const end = start + itemsPerPage;
                 for (let i = start; i < end; i++) {
@@ -277,26 +276,40 @@
 
                 if(pageCountSpan) pageCountSpan.innerText = page;
 
+                // 3. Przewiń do góry (jeśli nie ma błędu)
                 if(errorSummary.style.display === 'none') {
                      window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
 
-                 const firstNewQuestion = questions[start];
-                if (firstNewQuestion) {
-                    let targetInput = firstNewQuestion.querySelector('input[type="radio"]');
-                    if (targetInput && targetInput.offsetParent === null) {
-                         targetInput = firstNewQuestion.querySelector('select');
-                    }
-                    if (targetInput) {
+                // 4. Obsługa Focusa (WCAG) - ZMIANA:
+                if (page === 1) {
+                    // Na 1. stronie focus na wybór płci
+                    const genderInput = document.getElementById('genderF');
+                    if (genderInput) {
                         setTimeout(() => {
-                           targetInput.focus({ preventScroll: true });
+                           genderInput.focus({ preventScroll: true });
                         }, 300);
+                    }
+                } else {
+                    // Na kolejnych stronach focus na pierwsze pytanie widoczne na tej stronie
+                    const firstNewQuestion = questions[start];
+                    if (firstNewQuestion) {
+                        let targetInput = firstNewQuestion.querySelector('input[type="radio"]');
+                        // Sprawdzenie dla wersji mobilnej (select) vs desktop (radio)
+                        if (targetInput && targetInput.offsetParent === null) {
+                             targetInput = firstNewQuestion.querySelector('select');
+                        }
+
+                        if (targetInput) {
+                            setTimeout(() => {
+                               targetInput.focus({ preventScroll: true });
+                            }, 300);
+                        }
                     }
                 }
 
                 if(btnPrev) btnPrev.style.display = (page > 1) ? 'block' : 'none';
 
-                // Logika pokazywania przycisku SUBMIT tylko na ostatniej stronie
                 if (page === totalPages) {
                     if(btnNext) btnNext.style.display = 'none';
                     if(btnSubmit) btnSubmit.style.display = 'block';
@@ -310,11 +323,13 @@
                 if (validatePage(currentPage)) {
                     if (currentPage < totalPages) { currentPage++; showPage(currentPage); }
                 } else {
+                    // WCAG: Zastąpienie alert()
                     showError(@Json.Serialize(txt.Fill.AlertPage));
                 }
             });
 
             if(btnPrev) btnPrev.addEventListener('click', function () {
+                // Ukryj błąd przy cofaniu
                 if(errorSummary) errorSummary.style.display = 'none';
                 if (currentPage > 1) { currentPage--; showPage(currentPage); }
             });
@@ -322,13 +337,11 @@
             const form = document.getElementById('questionnaireForm');
             if(form) {
                 form.addEventListener('submit', function(e) {
-                    // POPRAWKA: Blokada wysyłki, jeśli nie jesteśmy na ostatniej stronie
                     if (currentPage < totalPages) {
                         e.preventDefault();
                         return false;
                     }
 
-                    // Walidacja ostatniej strony przed wysyłką
                     if (!validatePage(currentPage)) {
                         e.preventDefault();
                         showError(@Json.Serialize(txt.Fill.AlertAll));
@@ -343,6 +356,7 @@
 }
 
 <style>
+    /* WCAG Focus Styles */
     .btn-check:focus-visible + .btn,
     .form-select:focus-visible,
     .form-check-input:focus-visible,
