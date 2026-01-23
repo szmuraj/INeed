@@ -30,13 +30,13 @@ h5, h6 {
     font-weight: 400;
 }
 
-// --- PASEK BOCZNY (Sidebar) ---
+/* --- PASEK BOCZNY (Sidebar) --- */
 .sidebar-container {
     background-color: darken($blue1, 3%);
     flex-shrink: 0;
 }
 
-// --- STYLE PRZYCISKÓW ODPOWIEDZI (KAFELKI) ---
+/* --- STYLE PRZYCISKÓW ODPOWIEDZI (KAFELKI) --- */
 .btn-answer {
     display: flex;
     align-items: center;
@@ -56,19 +56,19 @@ h5, h6 {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-// Hover (najechanie myszk¹)
-.btn-answer:hover {
-    opacity: 1;
-    transform: translateY(-2px);
-}
+    /* Hover (najechanie myszk¹) */
+    .btn-answer:hover {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
 
-// Stan AKTYWNY (po klikniêciu)
+/* Stan AKTYWNY (po klikniêciu) */
 .btn-check:checked + .btn-answer {
     opacity: 1;
     border-color: $white;
 }
 
-// Kolory kafelków
+/* Kolory kafelków */
 .tile-red {
     background-color: $answer-red;
 }
@@ -89,19 +89,20 @@ h5, h6 {
     background-color: $answer-green;
 }
 
-// Przycisk "KONTYNUUJ" (Lemon)
+/* Przycisk "KONTYNUUJ" (Lemon) */
 .btn-continue {
     background-color: $lemon;
     color: #000;
     border: none;
     text-transform: uppercase;
-    &:hover
-
-{
-    background-color: lighten($lemon, 5%);
-    color: #000;
 }
-// Klasa dla Twojego prostok¹ta
+
+    .btn-continue:hover {
+        background-color: lighten($lemon, 5%);
+        color: #000;
+    }
+
+/* Klasa dla Twojego prostok¹ta */
 .custom-rect-blue1 {
     background-color: $blue1;
     display: flex;
@@ -109,6 +110,7 @@ h5, h6 {
     justify-content: center;
     font-weight: bold;
 }
+
 .btn-answer-base {
     border: 1px solid rgba(0,0,0,0.1);
     transition: all 0.2s;
@@ -160,5 +162,15 @@ h5, h6 {
     z-index: 2;
 }
 
-Wa¿ne: Odœwie¿anie strony
+/* WCAG: U³atwienia dla czytników ekranowych (kopia z Bootstrap, jeœli brak) */
+.visually-hidden-focusable:not(:focus):not(:focus-within) {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
 }

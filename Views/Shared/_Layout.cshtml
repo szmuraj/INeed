@@ -6,7 +6,6 @@
     var currentVisitorId = AppConstants.GetVisitorId(ViewBag.VisitorId as string ?? Context.Request.Query["visitorId"].ToString());
     string GetButtonColor(string controller, string action, string? formId = null)
     {
-        // ... (reszta funkcji GetButtonColor bez zmian) ...
         var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
         var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
         var queryKw = Context.Request.Query["kw"].ToString();
@@ -54,6 +53,8 @@
 
         .navbar-toggler:focus {
             box-shadow: none;
+            /* WCAG: Wymuszenie widoczności fokusu dla przycisku menu mobilnego */
+            outline: 3px solid @AppConstants.Colors.FocusOutline;
         }
 
         .mobile-nav-link {
@@ -63,14 +64,34 @@
             .mobile-nav-link:last-child {
                 border-bottom: none;
             }
+
+        /* WCAG: Skip link style */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: @AppConstants.Colors.ButtonAction;
+            color: #000;
+            padding: 8px;
+            z-index: 9999;
+            transition: top 0.1s;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+            .skip-link:focus {
+                top: 0;
+            }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
 
+    @* WCAG 2.4.1: Mechanizm pomijania bloków (Skip Link) *@
+    <a href="#main-content" class="skip-link">Przejdź do treści głównej</a>
+
     @* --- PASEK MOBILNY --- *@
     <nav class="navbar navbar-dark d-lg-none w-100 shadow-sm border-bottom border-secondary border-opacity-25"
          style="background-color: @AppConstants.Colors.Primary; flex-shrink: 0; z-index: 1000;">
-        @* H1: Struktura dla czytnika *@
         <h1 class="visually-hidden">Nawigacja mobilna</h1>
 
         <div class="container-fluid">
@@ -79,7 +100,7 @@
                asp-controller="@AppConstants.Routing.HomeController"
                asp-action="@AppConstants.Routing.ActionIndex"
                asp-route-visitorId="@currentVisitorId">
-                <img src="@Url.Content(AppConstants.Assets.LogoPath)" alt="Logo" style="height: 35px; width: auto;">
+                <img src="@Url.Content(AppConstants.Assets.LogoPath)" alt="Logo @AppConstants.Texts.CompanyName" style="height: 35px; width: auto;">
                 <span class="fw-bold small text-uppercase" style="letter-spacing: 1px;">@AppConstants.Texts.CompanyName</span>
             </a>
 
@@ -95,7 +116,7 @@
                            asp-controller="@AppConstants.Routing.HomeController"
                            asp-action="@AppConstants.Routing.ActionIndex"
                            asp-route-visitorId="@currentVisitorId">
-                            <i class="bi bi-house-door-fill me-2 text-warning"></i> @AppConstants.Texts.Layout.Questionnaires
+                            <i class="bi bi-house-door-fill me-2 text-warning" aria-hidden="true"></i> @AppConstants.Texts.Layout.Questionnaires
                         </a>
                     </li>
 
@@ -109,7 +130,7 @@
                                    asp-action="@AppConstants.Routing.ActionFill"
                                    asp-route-kw="@form.Id"
                                    asp-route-visitorId="@currentVisitorId">
-                                    <i class="bi bi-file-text me-2"></i> @form.Title
+                                    <i class="bi bi-file-text me-2" aria-hidden="true"></i> @form.Title
                                 </a>
                             </li>
                         }
@@ -120,7 +141,7 @@
                            asp-controller="@AppConstants.Routing.HomeController"
                            asp-action="@AppConstants.Routing.ActionContact"
                            asp-route-visitorId="@currentVisitorId">
-                            <i class="bi bi-envelope-fill me-2 text-warning"></i> @AppConstants.Texts.Layout.Contact
+                            <i class="bi bi-envelope-fill me-2 text-warning" aria-hidden="true"></i> @AppConstants.Texts.Layout.Contact
                         </a>
                     </li>
                 </ul>
@@ -133,7 +154,6 @@
 
         @* --- SIDEBAR --- *@
         <nav class="sidebar-container d-none d-lg-flex flex-column p-3 text-white flex-shrink-0" style="width: 275px;">
-            @* H1: Struktura dla czytnika *@
             <h1 class="visually-hidden">Pasek boczny nawigacji</h1>
 
             <div class="mb-5 text-center">
@@ -148,13 +168,11 @@
                 <div class="d-flex flex-column align-items-center w-100 flex-grow-1 pt-4 pb-4">
                     <div class="nav nav-pills flex-column gap-3 w-75">
 
-                        @* WYMAGANIE: H2 dla przycisku ANKIETY + Focus na Main *@
                         <h2 class="w-100 m-0 p-0 fs-6 fw-normal">
                             <a class="nav-link text-white text-center shadow-sm"
                                asp-controller="@AppConstants.Routing.HomeController"
                                asp-action="@AppConstants.Routing.ActionIndex"
                                asp-route-visitorId="@currentVisitorId"
-                               asp-fragment="main-content"
                                style="background-color: @GetButtonColor(AppConstants.Routing.HomeController, AppConstants.Routing.ActionIndex);">
                                 @AppConstants.Texts.Layout.Questionnaires
                             </a>
@@ -164,7 +182,6 @@
                         {
                             foreach (var form in _context.Forms.Where(f => f.IsActive).ToList())
                             {
-                                @* WYMAGANIE: H2 dla przycisków formularzy *@
                                 <h2 class="w-100 m-0 p-0 fs-6 fw-normal">
                                     <a class="nav-link text-white text-center shadow-sm"
                                        asp-controller="@AppConstants.Routing.QuestionnaireController"
@@ -178,7 +195,6 @@
                             }
                         }
 
-                        @* WYMAGANIE: H2 dla przycisku KONTAKT *@
                         <h2 class="w-100 m-0 p-0 fs-6 fw-normal">
                             <a class="nav-link text-white text-center shadow-sm"
                                asp-controller="@AppConstants.Routing.HomeController"
@@ -200,10 +216,8 @@
 
             @* HEADER *@
             <header class="bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
-                @* H1: Struktura dla czytnika *@
                 <h1 class="visually-hidden">Pasek górny</h1>
 
-                @* WYMAGANIE: H2 dla Wyboru języka (sekcja) *@
                 <section aria-labelledby="lang-heading" class="d-flex gap-3 align-items-center ms-3">
                     <h2 id="lang-heading" class="visually-hidden">Wybór języków</h2>
 
@@ -211,21 +225,19 @@
                           asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
                           method="post" class="d-flex gap-3 align-items-center">
                         <button type="submit" name="culture" value="pl-PL" class="btn p-0 border-0 bg-transparent" title="Polski">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="34" height="24" viewBox="0 0 640 480" class="rounded shadow-sm flag-hover"><g fill-rule="evenodd"><path fill="#fff" d="M640 480H0V0h640z" /><path fill="#dc143c" d="M640 480H0V240h640z" /></g><rect width="640" height="480" fill="none" stroke="#e0e0e0" stroke-width="2" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="34" height="24" viewBox="0 0 640 480" class="rounded shadow-sm flag-hover" role="img" aria-label="Polska flaga"><g fill-rule="evenodd"><path fill="#fff" d="M640 480H0V0h640z" /><path fill="#dc143c" d="M640 480H0V240h640z" /></g><rect width="640" height="480" fill="none" stroke="#e0e0e0" stroke-width="2" /></svg>
                         </button>
                         <button type="submit" name="culture" value="en-US" class="btn p-0 border-0 bg-transparent" title="English">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="34" height="24" viewBox="0 0 640 480" class="rounded shadow-sm flag-hover"><path fill="#bd3d44" d="M0 0h640v480H0" /><path stroke="#fff" stroke-width="37" d="M0 553v-553h640" /><path fill="#fff" d="M0 37l640 405m0-405L0 442" /><path stroke="#192f5d" stroke-width="24" d="M0 553v-553h640M0 37l640 405m0-405L0 442" /><rect width="640" height="480" fill="#bf0a30" /><path fill="#fff" d="M0 40h640v40H0zM0 120h640v40H0zM0 200h640v40H0zM0 280h640v40H0zM0 360h640v40H0zM0 440h640v40H0z" /><rect width="260" height="230" fill="#002868" /><text x="15" y="150" font-size="180" fill="white">★</text><rect width="640" height="480" fill="none" stroke="#e0e0e0" stroke-width="2" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="34" height="24" viewBox="0 0 640 480" class="rounded shadow-sm flag-hover" role="img" aria-label="USA flag"><path fill="#bd3d44" d="M0 0h640v480H0" /><path stroke="#fff" stroke-width="37" d="M0 553v-553h640" /><path fill="#fff" d="M0 37l640 405m0-405L0 442" /><path stroke="#192f5d" stroke-width="24" d="M0 553v-553h640M0 37l640 405m0-405L0 442" /><rect width="640" height="480" fill="#bf0a30" /><path fill="#fff" d="M0 40h640v40H0zM0 120h640v40H0zM0 200h640v40H0zM0 280h640v40H0zM0 360h640v40H0zM0 440h640v40H0z" /><rect width="260" height="230" fill="#002868" /><text x="15" y="150" font-size="180" fill="white">★</text><rect width="640" height="480" fill="none" stroke="#e0e0e0" stroke-width="2" /></svg>
                         </button>
                     </form>
                 </section>
 
                 <div class="d-flex flex-column align-items-end">
-                    @* WYMAGANIE: H2 dla LOGO (Obrazek z nazwą) *@
                     <h2 class="m-0 p-0 lh-1">
-                        <img src="@Url.Content(AppConstants.Assets.NamePath)" alt="Logo Nazwa" style="height: 50px; width: auto; object-fit: contain;">
+                        <img src="@Url.Content(AppConstants.Assets.NamePath)" alt="@AppConstants.Texts.CompanyName" style="height: 50px; width: auto; object-fit: contain;">
                     </h2>
 
-                    @* WYMAGANIE: H2 dla HASŁA (Slogan) *@
                     <h2 class="mt-1 d-none d-sm-block m-0 p-0" style="font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.875rem; line-height: 1.2; color: @AppConstants.Colors.Accent;">
                         @AppConstants.Texts.Slogan
                     </h2>
@@ -235,9 +247,8 @@
                 </div>
             </header>
 
-            @* WYMAGANIE: Main content z tabindex i ID dla fokusu *@
+            @* WCAG: Main content z tabindex i ID dla fokusu *@
             <main id="main-content" class="flex-grow-1 bg-white" tabindex="-1" style="outline: none;">
-                @* H1: Struktura dla czytnika *@
                 <h1 class="visually-hidden">Treść główna</h1>
 
                 <div class="container-fluid pt-4 p-4 h-100">
@@ -257,10 +268,9 @@
             </main>
 
             <footer class="bg-white border-top text-muted mt-auto">
-                @* H1: Struktura dla czytnika *@
                 <h1 class="visually-hidden">Stopka</h1>
                 <div class="container-fluid p-3 text-center">
-                    &copy; 2026 - @AppConstants.Texts.CompanyName -
+                    &copy; @DateTime.Now.Year - @AppConstants.Texts.CompanyName -
                     <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">@AppConstants.Texts.Layout.PrivacyPolicy</a> |
                     <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">@AppConstants.Texts.Layout.Terms</a>
                 </div>
@@ -269,12 +279,12 @@
     </div>
 
     @* --- COOKIE CONSENT --- *@
-    <div id="cookieConsentContainer" class="fixed-bottom p-4 shadow-lg"
+    <div id="cookieConsentContainer" role="dialog" aria-labelledby="cookieHeading" class="fixed-bottom p-4 shadow-lg"
          style="background-color: @AppConstants.Colors.Primary; border-top: 4px solid @AppConstants.Colors.ButtonSubmit; display: none; z-index: 9999;">
         <div class="container">
             <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
                 <div class="text-white">
-                    <h5 class="fw-bold mb-1" style="color: @AppConstants.Colors.ButtonSubmit;">@AppConstants.Texts.Layout.CookieHeader</h5>
+                    <h5 id="cookieHeading" class="fw-bold mb-1" style="color: @AppConstants.Colors.ButtonSubmit;">@AppConstants.Texts.Layout.CookieHeader</h5>
                     <p class="mb-0 small opacity-75">
                         @AppConstants.Texts.Layout.CookieBody
                         <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal" class="text-white text-decoration-underline">@AppConstants.Texts.Layout.PrivacyPolicy</a>.
@@ -293,14 +303,17 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             if (!localStorage.getItem("cookieConsent")) {
-                setTimeout(function() { document.getElementById("cookieConsentContainer").style.display = "block"; }, 500);
+                setTimeout(function() {
+                    var cookieContainer = document.getElementById("cookieConsentContainer");
+                    cookieContainer.style.display = "block";
+                }, 500);
             }
             document.getElementById("acceptCookies").addEventListener("click", function () {
                 localStorage.setItem("cookieConsent", "true");
                 document.getElementById("cookieConsentContainer").style.display = "none";
             });
 
-            // SKRYPT FOKUSOWANIA: Jeśli URL ma #main-content, ustaw fokus
+            // SKRYPT FOKUSOWANIA: Jeśli URL ma #main-content (skip link), ustaw fokus
             if (window.location.hash === '#main-content') {
                 const main = document.getElementById('main-content');
                 if (main) {
@@ -315,7 +328,6 @@
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    @* WYMAGANIE: H2 dla tytułu modala *@
                     <h2 class="modal-title h5" id="privacyModalLabel">@AppConstants.Texts.Layout.PrivacyPolicy</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
                 </div>
@@ -333,7 +345,6 @@
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    @* WYMAGANIE: H2 dla tytułu modala *@
                     <h2 class="modal-title h5" id="termsModalLabel">@AppConstants.Texts.Layout.Terms</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
                 </div>

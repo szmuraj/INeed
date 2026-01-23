@@ -6,17 +6,20 @@
 
     var title = AppConstants.SelectContent(Model.Title, Model.TitleEN);
     ViewData[AppConstants.Keys.Title] = title;
-
     var descLong = AppConstants.SelectContent(Model.DecryptionLong, Model.DecryptionLongEN);
     var descShort = AppConstants.SelectContent(Model.DecryptionShort, Model.DecryptionShortEN);
     var finalDesc = !string.IsNullOrEmpty(descLong) ? descLong : descShort;
-
     string visitorId = AppConstants.GetVisitorId(ViewBag.VisitorId as string);
 }
 
 <div class="container-fluid py-4">
     <div class="row justify-content-center">
         <div class="col-lg-10">
+
+            @* WCAG: Kontener na błędy (zamiast alert()) *@
+            <div id="validation-summary" class="alert alert-danger mb-4 shadow-sm" role="alert" style="display:none; border-radius: 10px;" tabindex="-1">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <span id="validation-message"></span>
+            </div>
 
             <div class="d-flex justify-content-between align-items-start mb-5 w-100"
                  style="color: @AppConstants.Colors.TextMain !important; border-bottom: 1px solid @AppConstants.Colors.BorderTransparent; padding-bottom: 20px;">
@@ -153,7 +156,7 @@
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // ... (Obsługa checkboxów i selectów bez zmian - zachowana dla kontekstu) ...
+
             const inputs = document.querySelectorAll('.btn-check');
             inputs.forEach(input => {
                 input.addEventListener('change', function() {
@@ -210,30 +213,48 @@
             const btnPrev = document.getElementById('btn-prev');
             const btnSubmit = document.getElementById('btn-submit');
 
+            // Elementy błędów
+            const errorSummary = document.getElementById('validation-summary');
+            const errorMessage = document.getElementById('validation-message');
+
             if(totalPagesSpan) totalPagesSpan.innerText = totalPages;
 
             function validatePage(page) {
                 const start = (page - 1) * itemsPerPage;
                 const end = start + itemsPerPage;
+                let isValid = true;
+
+                // Ukryj błąd przy ponownej walidacji
+                if(errorSummary) errorSummary.style.display = 'none';
+
                 for (let i = start; i < end; i++) {
                     if (questions[i]) {
                         const select = questions[i].querySelector('select');
                         if (select && select.offsetParent !== null) {
-                            if (!select.value) return false;
+                            if (!select.value) isValid = false;
                         }
                         else {
                             const checked = questions[i].querySelector('input[type="radio"]:checked');
-                            if (!checked) return false;
+                            if (!checked) isValid = false;
                         }
                     }
                 }
-                return true;
+                return isValid;
+            }
+
+            function showError(msg) {
+                if(errorMessage) errorMessage.innerText = msg;
+                if(errorSummary) {
+                    errorSummary.style.display = 'block';
+                    errorSummary.focus(); // WCAG: Przenieś focus na błąd
+                    // Scroll do błędu
+                    errorSummary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }
 
             function showPage(page) {
                 // 1. Ukryj wszystkie
                 questions.forEach(q => q.style.display = 'none');
-
                 // 2. Pokaż właściwe
                 const start = (page - 1) * itemsPerPage;
                 const end = start + itemsPerPage;
@@ -243,26 +264,21 @@
 
                 if(pageCountSpan) pageCountSpan.innerText = page;
 
-                // 3. Przewiń do góry
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // 3. Przewiń do góry (jeśli nie ma błędu)
+                if(errorSummary.style.display === 'none') {
+                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
 
-                // 4. NOWOŚĆ: Ustawienie fokusu na pierwsze pytanie nowej strony
-                const firstNewQuestion = questions[start];
+                // 4. Focus na pierwsze pytanie (tylko jeśli zmieniamy stronę, a nie przy błędzie)
+                 const firstNewQuestion = questions[start];
                 if (firstNewQuestion) {
-                    // Znajdź element interaktywny (radio lub select)
-                    // Sprawdzamy, czy jesteśmy w widoku desktop (radio widoczne) czy mobile (radio ukryte)
                     let targetInput = firstNewQuestion.querySelector('input[type="radio"]');
-
-                    // Jeśli radio jest ukryte (offsetParent === null to niezawodny sposób sprawdzenia widoczności),
-                    // szukamy selecta
                     if (targetInput && targetInput.offsetParent === null) {
                          targetInput = firstNewQuestion.querySelector('select');
                     }
-
                     if (targetInput) {
-                        // Mały timeout pozwala przeglądarce zakończyć renderowanie i scrollowanie
                         setTimeout(() => {
-                            targetInput.focus({ preventScroll: true });
+                           targetInput.focus({ preventScroll: true });
                         }, 300);
                     }
                 }
@@ -281,11 +297,14 @@
                 if (validatePage(currentPage)) {
                     if (currentPage < totalPages) { currentPage++; showPage(currentPage); }
                 } else {
-                    alert(@Json.Serialize(txt.Fill.AlertPage));
+                    // WCAG: Zastąpienie alert()
+                    showError(@Json.Serialize(txt.Fill.AlertPage));
                 }
             });
 
             if(btnPrev) btnPrev.addEventListener('click', function () {
+                // Ukryj błąd przy cofaniu
+                if(errorSummary) errorSummary.style.display = 'none';
                 if (currentPage > 1) { currentPage--; showPage(currentPage); }
             });
 
@@ -294,7 +313,7 @@
                 form.addEventListener('submit', function(e) {
                     if (!validatePage(currentPage)) {
                         e.preventDefault();
-                        alert(@Json.Serialize(txt.Fill.AlertAll));
+                        showError(@Json.Serialize(txt.Fill.AlertAll));
                         return;
                     }
                 });
