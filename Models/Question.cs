@@ -10,7 +10,7 @@ namespace INeed.Models
         [Key]
         public Guid QuestionId { get; set; }
 
-        public int FormId { get; set; } // <--- ZMIANA NA INT
+        public int FormId { get; set; }
         public int Number { get; set; }
 
         public string Query { get; set; }

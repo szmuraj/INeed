@@ -27,9 +27,9 @@
         public string CookieHeader { get; set; }
         public string CookieBody { get; set; }
         public string CookieButton { get; set; }
-        public string Slogan { get; set; }       // <--- DODAJ TO
-        public string NavSurveys { get; set; }   // <--- DODAJ TO
-        public string NavContact { get; set; }   // <--- DODAJ TO
+        public string Slogan { get; set; }
+        public string NavSurveys { get; set; }
+        public string NavContact { get; set; }
         public string FooterRights { get; set; }
     }
 
@@ -49,6 +49,7 @@
         public string StenLow { get; set; }
         public string StenAverage { get; set; }
         public string StenHigh { get; set; }
+        public string NoImage { get; set; }
     }
 
     public class ButtonResources
@@ -63,6 +64,7 @@
         public string Start { get; set; }
         public string RetakeTest { get; set; }
         public string StartTest { get; set; }
+        public string Check { get; set; }
     }
 
     public class PolicyContentResources
@@ -141,14 +143,17 @@
         public string RodoConsent { get; set; }
         public string And { get; set; }
         public string AcceptTerms { get; set; }
-        public string NormsFemale { get; set; }   // NOWE
-        public string NormsMale { get; set; }     // NOWE
+        public string NormsFemale { get; set; }
+        public string NormsMale { get; set; }
         public string YourResultSten { get; set; }
+        public string CategoryAriaLabelFormat { get; set; }
+        public string EmailInstruction { get; set; }
     }
 
     public class HomeResources
     {
         public string Header { get; set; }
         public string SubHeader { get; set; }
+        public string NoActiveQuestionnaires { get; set; }
     }
 }

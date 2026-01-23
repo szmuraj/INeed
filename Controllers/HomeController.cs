@@ -32,7 +32,6 @@ namespace INeed.Controllers
             return View(forms);
         }
 
-        // DRY: Jedna metoda obs³uguj¹ca strony informacyjne
         public IActionResult Info(string id, string visitorId)
         {
             visitorId = AppConstants.GetVisitorId(visitorId);

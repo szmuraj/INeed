@@ -6,7 +6,7 @@ namespace INeed.Models
     {
         [Key]
         [Display(Name = "ID formularza: ")]
-        public int Id { get; set; } // <--- ZMIANA NA INT
+        public int Id { get; set; }
 
         [Required]
         [Display(Name = "Tytuł formularza: ")]

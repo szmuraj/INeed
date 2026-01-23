@@ -41,7 +41,8 @@
                     DontSpecify = "Nie podaję",
                     StenLow = "Niski",
                     StenAverage = "Przeciętny",
-                    StenHigh = "Wysoki"
+                    StenHigh = "Wysoki",
+                    NoImage = "Brak grafiki"
                 },
 
                 Buttons = new ButtonResources
@@ -55,7 +56,8 @@
                     SendResults = "Wyślij wynik na e-mail",
                     Start = "Rozpocznij",
                     RetakeTest = "Wypełnij ponownie",
-                    StartTest = "Rozpocznij test"
+                    StartTest = "Rozpocznij test",
+                    Check = "SPRAWDŹ"
                 },
 
                 PolicyContent = new PolicyContentResources
@@ -197,13 +199,16 @@
                     AcceptTerms = ", a także zgadzam się na przetwarzanie danych w celu wysyłki wyniku.",
                     NormsFemale = "Normy dla Kobiet",
                     NormsMale = "Normy dla Mężczyzn",
-                    YourResultSten = "Twój wynik (STEN)"
+                    YourResultSten = "Twój wynik (STEN)",
+                    CategoryAriaLabelFormat = "Kategoria: {0}. Twój wynik: {1} na {2}. Naciśnij Enter, aby odczytać szczegółowy opis.",
+                    EmailInstruction = "Jeżeli chcesz by wysłać wynik twojej ankiety na maila wprowadź go teraz, naciśnij przycisk Akceptuję, a następnie przycisk wyślij."
                 },
 
                 Home = new HomeResources
                 {
                     Header = "Dostępne Kwestionariusze",
-                    SubHeader = "Wybierz ankietę z listy poniżej, aby rozpocząć proces oceny."
+                    SubHeader = "Wybierz ankietę z listy poniżej, aby rozpocząć proces oceny.",
+                    NoActiveQuestionnaires = "Brak aktywnych kwestionariuszy."
                 }
             };
         }

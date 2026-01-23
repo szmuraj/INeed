@@ -75,8 +75,8 @@
                              role="button"
                              aria-expanded="false"
                              aria-controls="@descId"
-                             aria-label="Kategoria: @cat.CategoryName. Twój wynik: @cat.ScoreObtained na @cat.ScoreMax. Naciśnij Enter, aby odczytać szczegółowy opis."
-                             onkeydown="handleCategoryEnter(event, '@descId')">
+                             aria-label="@string.Format(AppConstants.Texts.Result.CategoryAriaLabelFormat, cat.CategoryName, cat.ScoreObtained, cat.ScoreMax)">
+
 
                             <div class="d-flex justify-content-between align-items-end mb-2">
                                 <h2 class="text-uppercase fw-bold m-0 h4" style="color: @AppConstants.Colors.TextDark;" aria-hidden="true">
@@ -106,28 +106,46 @@
                             @if (showBoth)
                             {
                                 <div class="row g-4" aria-hidden="true">
-                                    <div class="col-md-6">
-                                        <section class="p-4 h-100 border rounded shadow-sm"
-                                                 style="background-color: @AppConstants.Colors.BgFemale; border-color: @AppConstants.Colors.BorderFemale !important;">
-                                            <h3 class="fw-bold h5" style="color: @AppConstants.Colors.TextFemale;">@AppConstants.Texts.Result.NormsFemale</h3>
-                                            <hr style="border-color: @AppConstants.Colors.TextFemale; opacity: 0.3;">
-                                            <div class="mb-3">
-                                                <strong>STEN: @cat.StenFemale</strong> <span class="badge bg-white text-dark border ms-2">@cat.DescFemale</span>
+                                    @{
+                                        // Definicja funkcji lokalnej do renderowania karty
+                                        void RenderGenderCard(string title, string bgColor, string borderColor, string txtColor, int sten, string desc, string advice)
+                                        {
+                                            <div class="col-md-6">
+                                                <section class="p-4 h-100 border rounded shadow-sm"
+                                                         style="background-color: @bgColor; border-color: @borderColor !important;">
+                                                    <h3 class="fw-bold h5" style="color: @txtColor;">@title</h3>
+                                                    <hr style="border-color: @txtColor; opacity: 0.3;">
+                                                    <div class="mb-3">
+                                                        <strong>STEN: @sten</strong>
+                                                        <span class="badge bg-white text-dark border ms-2">@desc</span>
+                                                    </div>
+                                                    <p class="mb-0 small text-muted" style="line-height: 1.6;">@advice</p>
+                                                </section>
                                             </div>
-                                            <p class="mb-0 small text-muted" style="line-height: 1.6;">@cat.AdviceFemale</p>
-                                        </section>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <section class="p-4 h-100 border rounded shadow-sm"
-                                                 style="background-color: @AppConstants.Colors.BgMale; border-color: @AppConstants.Colors.BorderMale !important;">
-                                            <h3 class="fw-bold h5" style="color: @AppConstants.Colors.TextMale;">@AppConstants.Texts.Result.NormsMale</h3>
-                                            <hr style="border-color: @AppConstants.Colors.TextMale; opacity: 0.3;">
-                                            <div class="mb-3">
-                                                <strong>STEN: @cat.StenMale</strong> <span class="badge bg-white text-dark border ms-2">@cat.DescMale</span>
-                                            </div>
-                                            <p class="mb-0 small text-muted" style="line-height: 1.6;">@cat.AdviceMale</p>
-                                        </section>
-                                    </div>
+                                        }
+
+                                        // Wywołanie funkcji dla kobiet
+                                        RenderGenderCard(
+                                        AppConstants.Texts.Result.NormsFemale,
+                                        AppConstants.Colors.BgFemale,
+                                        AppConstants.Colors.BorderFemale,
+                                        AppConstants.Colors.TextFemale,
+                                        cat.StenFemale,
+                                        cat.DescFemale,
+                                        cat.AdviceFemale
+                                        );
+
+                                        // Wywołanie funkcji dla mężczyzn
+                                        RenderGenderCard(
+                                        AppConstants.Texts.Result.NormsMale,
+                                        AppConstants.Colors.BgMale,
+                                        AppConstants.Colors.BorderMale,
+                                        AppConstants.Colors.TextMale,
+                                        cat.StenMale,
+                                        cat.DescMale,
+                                        cat.AdviceMale
+                                        );
+                                    }
                                 </div>
                             }
                             else
@@ -178,7 +196,7 @@
 
                         @* --- ZMIANA: Instrukcja dla czytnika --- *@
                         <span id="email-instruction" class="visually-hidden">
-                            Jeżeli chcesz by wysłać wynik twojej ankiety na maila wprowadź go teraz, naciśnij przycisk Akceptuję, a następnie przycisk wyślij.
+							@AppConstants.Texts.Result.EmailInstruction
                         </span>
 
                         @* Dodano aria-describedby="email-instruction" *@

@@ -5,7 +5,6 @@ namespace INeed.Helpers
 {
     public static class AppConstants
     {
-        // ... (Defaults, Keys, Routing, Assets - BEZ ZMIAN) ...
         public const string FillRoute = "Fill";
 
         public static class Defaults
@@ -36,7 +35,7 @@ namespace INeed.Helpers
             public const string TextSecondary = "#6c757d";
             public const string TextMain = "#D9D9D9";
             public const string TextHighlight = "#76FF03";
-            public const string TextDark = "#333333"; // Nowy (dla nagłówków kategorii)
+            public const string TextDark = "#333333";
             public const string BorderTransparent = "rgba(217,217,217,0.1)";
             public const string FocusOutline = "#0d6efd";
             public const string InputBackgroundActive = "#f0f8ff";
@@ -81,26 +80,20 @@ namespace INeed.Helpers
         private static bool IsEn => CultureInfo.CurrentUICulture.Name.StartsWith("en");
         public static TextResources Texts => IsEn ? AppConstantsEN.Get() : AppConstantsPL.Get();
 
-        /// <summary>
-        /// DRY: Zwraca podany identyfikator lub domyślny ("000000").
-        /// </summary>
+        /// Zwraca podany identyfikator lub domyślny ("000000").
         public static string GetVisitorId(string? visitorId)
         {
             return string.IsNullOrEmpty(visitorId) ? Defaults.VisitorId : visitorId;
         }
 
-        /// <summary>
-        /// SKALOWALNOŚĆ: Wybiera treść w zależności od języka.
-        /// </summary>
+        /// Wybiera treść w zależności od języka.
         public static string SelectContent(string defaultContent, string? enContent)
         {
             if (IsEn && !string.IsNullOrEmpty(enContent)) return enContent;
             return defaultContent;
         }
 
-        /// <summary>
-        /// SKALOWALNOŚĆ: Sprawdza dopasowanie kategorii.
-        /// </summary>
+        /// Sprawdza dopasowanie kategorii.
         public static bool IsCategoryMatch(Category cat, string key)
         {
             if (cat == null || string.IsNullOrWhiteSpace(key)) return false;

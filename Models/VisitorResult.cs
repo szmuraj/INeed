@@ -20,7 +20,6 @@ namespace INeed.Models
         [ForeignKey("FormId")]
         public virtual Form Form { get; set; }
 
-        // ZMIANA: bool? zamiast string.
         // true = Mężczyzna, false = Kobieta, null = Brak wyboru/Oba
         public bool? IsMale { get; set; }
 
@@ -44,8 +43,7 @@ namespace INeed.Models
         [ForeignKey("CategoryId")]
         public virtual Category Category { get; set; }
 
-        public int Score { get; set; } // Tylko surowy wynik zostaje w bazie
+        public int Score { get; set; }
 
-        // USUNIĘTO: MaxScore i Sten (będą liczone w locie)
     }
 }

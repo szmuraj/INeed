@@ -160,7 +160,7 @@ namespace INeed.Controllers
             catch { return 0; }
         }
 
-        // ZMIANA: Skrócona logika wyboru języka (Pattern Match)
+        // Logika wyboru języka
         private string GetAdvice(int sten, Category cat)
         {
             if (cat == null) return string.Empty;

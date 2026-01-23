@@ -21,7 +21,6 @@ namespace INeed.Services
         {
             var settings = _configuration.GetSection("EmailSettings");
 
-            // Używamy 'using', aby SmtpClient został poprawnie zamknięty po wysłaniu
             using (var smtpClient = new SmtpClient(settings["Host"]))
             {
                 smtpClient.Port = int.Parse(settings["Port"]);
@@ -44,9 +43,8 @@ namespace INeed.Services
                 }
                 catch (Exception ex)
                 {
-                    // Tutaj warto dodać logowanie błędów, jeśli mail nie wyjdzie
                     Console.WriteLine($"Błąd wysyłki e-mail: {ex.Message}");
-                    throw; // Rzucamy dalej, by kontroler wiedział o błędzie
+                    throw;
                 }
             }
         }

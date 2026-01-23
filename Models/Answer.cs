@@ -17,18 +17,16 @@ namespace INeed.Models
         [StringLength(255)]
         public string Reply { get; set; } = string.Empty;
 
-        public string? ReplyEN { get; set; } // <--- NOWE POLE
+        public string? ReplyEN { get; set; }
 
         [Display(Name = "Punktacja")]
         public int Score { get; set; }
-
-        // --- NOWE POLA ---
 
         [Display(Name = "Kolejność wyświetlania")]
         public int? Order { get; set; } = 0;
 
         [Display(Name = "Kolor przycisku (HEX)")]
-        [StringLength(20)] // np. #FF0000
-        public string Color { get; set; } = "#607D8B"; // Domyślny szary
+        [StringLength(20)]
+        public string Color { get; set; } = "#607D8B";
     }
 }

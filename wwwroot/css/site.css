@@ -30,7 +30,7 @@ h5, h6 {
     font-weight: 400;
 }
 
-/* --- PASEK BOCZNY (Sidebar) --- */
+/* --- PASEK BOCZNY --- */
 .sidebar-container {
     background-color: darken($blue1, 3%);
     flex-shrink: 0;
@@ -56,13 +56,13 @@ h5, h6 {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-    /* Hover (najechanie myszk¹) */
+    /* Hover */
     .btn-answer:hover {
         opacity: 1;
         transform: translateY(-2px);
     }
 
-/* Stan AKTYWNY (po klikniêciu) */
+/* On-click */
 .btn-check:checked + .btn-answer {
     opacity: 1;
     border-color: $white;
@@ -114,7 +114,7 @@ h5, h6 {
 .btn-answer-base {
     border: 1px solid rgba(0,0,0,0.1);
     transition: all 0.2s;
-    min-width: 120px; /* Opcjonalnie: minimalna szerokoœæ dla estetyki */
+    min-width: 120px; /* Minimalna szerokoœæ */
     color: #fff !important; /* Wymuszamy bia³y tekst */
 }
 

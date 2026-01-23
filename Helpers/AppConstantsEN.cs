@@ -41,7 +41,8 @@
                     DontSpecify = "Don't specify",
                     StenLow = "Low",
                     StenAverage = "Average",
-                    StenHigh = "High"
+                    StenHigh = "High",
+                    NoImage = "No image"
                 },
 
                 Buttons = new ButtonResources
@@ -55,7 +56,8 @@
                     SendResults = "Send results via email",
                     Start = "Start",
                     RetakeTest = "Retake Test",
-                    StartTest = "Start Test"
+                    StartTest = "Start Test",
+                    Check = "CHECK"
                 },
 
                 PolicyContent = new PolicyContentResources
@@ -197,13 +199,17 @@
                     AcceptTerms = ", and I agree to data processing for sending the result.",
                     NormsFemale = "Female Norms",
                     NormsMale = "Male Norms",
-                    YourResultSten = "Your Result (STEN)"
+                    YourResultSten = "Your Result (STEN)",
+                    CategoryAriaLabelFormat = "Category: {0}. Your score: {1} out of {2}. Press Enter to read detailed description.",
+                    EmailInstruction = "If you wish to send your survey result via email, enter it now, press Accept, and then press Send."
+                
                 },
 
                 Home = new HomeResources
                 {
                     Header = "Available Questionnaires",
-                    SubHeader = "Select a questionnaire from the list below to start the assessment process."
+                    SubHeader = "Select a questionnaire from the list below to start the assessment process.",
+                    NoActiveQuestionnaires = "No active questionnaires."
                 }
             };
         }

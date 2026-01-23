@@ -29,7 +29,6 @@ namespace INeed.Models
         [Display(Name = "Normy (Mężczyźni)")]
         public string StenNormsMale { get; set; }
 
-        // --- BRAKUJĄCE POLA (DORADZTWO) ---
         [Display(Name = "Porada (Niski wynik)")]
         public string? AdviceLow { get; set; }
 

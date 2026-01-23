@@ -13,7 +13,6 @@ namespace INeed.Data
         {
         }
 
-        // USUNIĘTO: public DbSet<Sub>? Subs { get; set; }
         public DbSet<Form>? Forms { get; set; }
         public DbSet<Question>? Questions { get; set; }
         public DbSet<Answer>? Answers { get; set; }
@@ -25,9 +24,6 @@ namespace INeed.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // USUNIĘTO konfigurację dla Sub
-            // modelBuilder.Entity<Sub>().HasKey(s => s.SubId);
 
             // Konfiguracja Form -> Questions
             modelBuilder.Entity<Question>()
